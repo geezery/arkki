@@ -19,4 +19,8 @@ public static class ElementExtensions
 
     /// <summary>Makes a table cell cover <paramref name="columns"/> adjacent columns.</summary>
     public static ColumnSpan SpanColumns(this Element e, int columns) => new(e, columns);
+
+    /// <summary>Gives a table cell its own background and border over the whole cell, the row's full height.</summary>
+    public static CellFill CellFill(this Element e, Color? background, Color? border = null, double borderWidth = 0.5) =>
+        new(e, background, border, borderWidth);
 }

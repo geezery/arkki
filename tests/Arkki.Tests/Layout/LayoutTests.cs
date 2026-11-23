@@ -109,5 +109,23 @@ internal static class RowStyleTests
         Equal("page overlay runs on every page", 2, pages);
         string pdf = System.Text.Encoding.Latin1.GetString(doc.ToArray());
         Check("opacity is a graphics state", pdf.Contains("/ExtGState << /Gs1 << /ca 0.25 /CA 0.25 >> >>") && pdf.Contains("/Gs1 gs"));
+
+        // A filled cell paints its whole cell at the row's height, however short its own content is.
+        var cardDoc = new PdfDocument { Compression = System.IO.Compression.CompressionLevel.NoCompression };
+        var cardStyle = new TextStyle(new FontFamily(cardDoc.AddFont(TestData.Regular), cardDoc.AddFont(TestData.Bold)), 10);
+        var cards = new Table([new(Len.Pt(100)), new(Len.Pt(20)), new(Len.Pt(100))]) { CellPaddingX = 0, CellPaddingY = 0 };
+        cards.AddRow(
+            new TextBlock("short", cardStyle).CellFill(new Color(0, 0, 1)),
+            new Spacer(0),
+            new TextBlock("one\ntwo\nthree", cardStyle).CellFill(null, Color.Black).SpanColumns(1));
+        double rowHeight = cards.Layout(220, 500).Fragment!.Height;
+        var page = cardDoc.AddPage();
+        cards.Layout(220, 500).Fragment!.Draw(page.Canvas, 0, 0);
+        string cardPdf = System.Text.Encoding.Latin1.GetString(cardDoc.ToArray());
+        Equal("the row is as tall as its tallest cell", 3 * cardStyle.LineAdvance, rowHeight);
+        Check("the short cell is filled to the row's height", cardPdf.Contains($"0 0 100 {Fmt(rowHeight)} re"));
+        Check("the bordered cell is stroked at its offset", cardPdf.Contains($"120 0 100 {Fmt(rowHeight)} re"));
     }
+
+    private static string Fmt(double v) => v.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
 }

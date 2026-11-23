@@ -58,7 +58,19 @@ public sealed class Table : Element
         if (covered != Columns.Count) throw new ArgumentException($"Expected cells covering {Columns.Count} columns, got {covered}.");
     }
 
-    private static int Span(Element cell) => cell is ColumnSpan s ? s.Columns : 1;
+    private static CellFill? FillOf(Element cell) => cell switch
+    {
+        CellFill f => f,
+        ColumnSpan s => FillOf(s.Content),
+        _ => null,
+    };
+
+    private static int Span(Element cell) => cell switch
+    {
+        ColumnSpan s => s.Columns,
+        CellFill f => Span(f.Content),
+        _ => 1,
+    };
 
     /// <summary>Adds a row of text cells, each aligned according to its column.</summary>
     public Table AddRow(TextStyle style, params string[] cells)
@@ -144,6 +156,7 @@ public sealed class Table : Element
         double top = style.PaddingTop ?? CellPaddingY, bottom = style.PaddingBottom ?? CellPaddingY;
         var fragments = new Fragment[cells.Length];
         var offsets = new double[cells.Length];
+        var cellWidths = new double[cells.Length];
         double rowHeight = 0, x = 0;
         int column = 0;
         for (int i = 0; i < cells.Length; i++)
@@ -154,14 +167,16 @@ public sealed class Table : Element
             if (r.Status != LayoutStatus.Full) return null;
             fragments[i] = r.Fragment!;
             offsets[i] = x;
+            cellWidths[i] = cellWidth;
             x += cellWidth;
             rowHeight = Math.Max(rowHeight, r.Fragment!.Height);
         }
         double height = Math.Max(rowHeight + top + bottom, style.MinHeight);
-        return height > available + 0.001 ? null : new RowLayout(fragments, offsets, style, top, height, 0);
+        return height > available + 0.001 ? null : new RowLayout(cells, fragments, offsets, cellWidths, style, top, height, 0);
     }
 
-    private readonly record struct RowLayout(Fragment[] Cells, double[] Offsets, RowStyle Style, double PaddingTop, double Height, double Y);
+    private readonly record struct RowLayout(
+        Element[] Source, Fragment[] Cells, double[] Offsets, double[] Widths, RowStyle Style, double PaddingTop, double Height, double Y);
 
     private sealed class TableFragment : Fragment
     {
@@ -183,6 +198,21 @@ public sealed class Table : Element
                 {
                     canvas.SetFillColor(bg);
                     canvas.FillRect(x, top, Width, row.Height);
+                }
+                for (int i = 0; i < row.Cells.Length; i++)
+                {
+                    if (FillOf(row.Source[i]) is not { } fill) continue;
+                    if (fill.Background is { } cellBg)
+                    {
+                        canvas.SetFillColor(cellBg);
+                        canvas.FillRect(x + row.Offsets[i], top, row.Widths[i], row.Height);
+                    }
+                    if (fill.Border is { } border)
+                    {
+                        canvas.SetStrokeColor(border);
+                        canvas.SetLineWidth(fill.BorderWidth);
+                        canvas.StrokeRect(x + row.Offsets[i], top, row.Widths[i], row.Height);
+                    }
                 }
                 for (int i = 0; i < row.Cells.Length; i++)
                     row.Cells[i].Draw(canvas, x + row.Offsets[i] + _t.CellPaddingX, top + row.PaddingTop);
