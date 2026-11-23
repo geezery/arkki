@@ -1,0 +1,44 @@
+{
+  "language": "fi-FI",
+  "pageNumber": "Sivu {0} ({1})",
+  "pageNumberUnknownCount": "Sivu",
+  "invoiceNumberShort": "Nro {0}",
+
+  "invoiceDate": "Laskun päiväys",
+  "invoiceNumber": "Laskun numero",
+  "dueDate": "Eräpäivä",
+  "reference": "Viitenumero",
+  "paymentTerms": "Maksuehto",
+  "overdueInterest": "Viivästyskorko",
+  "buyerBusinessId": "Ostajan Y-tunnus",
+  "buyerReference": "Viitteenne",
+  "orderNumber": "Tilausnumero",
+  "agreementNumber": "Sopimusnumero",
+  "sellerContact": "Myyjän yhteyshenkilö",
+
+  "sellerBusinessId": "Y-tunnus {0}",
+  "sellerVatNumber": "ALV-nro {0}",
+  "sellerHomeTown": "Kotipaikka {0}",
+  "bic": "BIC {0}",
+
+  "rowArticle": "NIMIKE",
+  "rowDescription": "KUVAUS",
+  "rowQuantity": "MÄÄRÄ",
+  "rowUnit": "YKS.",
+  "rowUnitPrice": "À-HINTA",
+  "rowVatRate": "ALV %",
+  "rowAmount": "VEROTON {0}",
+
+  "vatRate": "ALV %",
+  "vatBase": "VEROTON",
+  "vatAmount": "ALV",
+  "vatTotal": "VEROLLINEN",
+
+  "totalVatExcluded": "Veroton yhteensä",
+  "totalVat": "Arvonlisävero yhteensä",
+  "totalToPay": "Maksettava yhteensä {0}",
+
+  "virtualBarcode": "Virtuaaliviivakoodi",
+  "giroInvoiceNumber": "Laskun numero / Fakturanummer {0}",
+  "giroInvoiceDate": "Laskun päiväys / Fakturadatum {0}"
+}

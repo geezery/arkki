@@ -1,0 +1,22 @@
+{
+  "payeeAccount": ["Saajan", "tilinumero", "Mottagarens", "kontonummer"],
+  "iban": "IBAN",
+  "payee": ["Saaja", "Mottagare"],
+  "payer": ["Maksajan", "nimi ja", "osoite", "Betalarens", "namn och", "adress"],
+  "signature": ["Allekirjoitus", "Underskrift"],
+  "fromAccount": ["Tililtä nro", "Från konto nr"],
+  "reference": ["Viitenumero", "Ref. nr"],
+  "dueDate": ["Eräpäivä", "Förfallodag"],
+  "euro": "Euro",
+  "title": "TILISIIRTO. GIRERING",
+  "legalText": [
+    "Maksu välitetään saajalle",
+    "maksujenvälityksen ehtojen mukaisesti ja",
+    "vain maksajan ilmoittaman tilinumeron",
+    "perusteella.",
+    "Betalningen förmedlas till mottagaren enligt",
+    "villkoren för betalningsförmedling och",
+    "endast till det kontonummer som betalaren",
+    "angivit."
+  ]
+}

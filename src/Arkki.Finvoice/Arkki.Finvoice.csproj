@@ -5,4 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Arkki.Pdf\Arkki.Pdf.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="**\*.json" Exclude="bin\**;obj\**" LogicalName="Arkki.Finvoice.%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>

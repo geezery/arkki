@@ -33,6 +33,17 @@ FinvoiceInvoice invoice = FinvoiceReader.Load("invoice.xml");
 File.WriteAllBytes("invoice.pdf", FinvoiceRenderer.RenderToArray(invoice, theme));
 ```
 
+The labels are Finnish by default. They are loaded from JSON, so another language is one file:
+
+```csharp
+// Same keys as src/Arkki.Finvoice/Invoices/invoice-texts-fi.json.
+var theme = new InvoiceTheme
+{
+    RegularFont = regular, BoldFont = bold,
+    Texts = InvoiceTexts.Load(File.OpenRead("invoice-texts-en.json")),
+};
+```
+
 Building your own documents uses the same layout elements the invoice is made of:
 
 ```csharp

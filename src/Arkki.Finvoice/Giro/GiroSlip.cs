@@ -34,17 +34,6 @@ public static class GiroSlip
     private const double ThinMm = 0.13, ThickMm = 0.50;
     private const double LabelSize = 7, LegalSize = 6, TitleSize = 8, DataSize = 10;
 
-    private static readonly string[] LegalText =
-    [
-        "Maksu välitetään saajalle",
-        "maksujenvälityksen ehtojen mukaisesti ja",
-        "vain maksajan ilmoittaman tilinumeron",
-        "perusteella.",
-        "Betalningen förmedlas till mottagaren enligt",
-        "villkoren för betalningsförmedling och",
-        "endast till det kontonummer som betalaren",
-        "angivit.",
-    ];
 
     /// <summary>Draws the form at the bottom of a page of the given height (points).</summary>
     public static void Draw(PdfCanvas c, double pageHeight, GiroData data, GiroStyle style)
@@ -53,6 +42,7 @@ public static class GiroSlip
         double X(double mm) => Unit.Mm(mm);
         double Y(double mm) => top + Unit.Mm(mm);
         PdfFont regular = style.Fonts.Regular, bold = style.Fonts.Bold;
+        GiroTexts t = style.Texts;
 
         // ---- Pre-printed form ----------------------------------------------------------------
         c.SetStrokeColor(style.FormColor);
@@ -74,32 +64,32 @@ public static class GiroSlip
 
         c.SetFillColor(style.FormColor);
         double labelRight = X(XLabel - 1.2);
-        void Labels(double firstBaselineMm, params string[] lines)
+        void Labels(double firstBaselineMm, string[] lines)
         {
             for (int i = 0; i < lines.Length; i++)
                 c.TextRight(regular, LabelSize, labelRight, Y(firstBaselineMm + i * 2.8), lines[i]);
         }
-        Labels(4.6, "Saajan", "tilinumero", "Mottagarens", "kontonummer");
-        Labels(YAccount + 6.2, "Saaja", "Mottagare");
-        Labels(YPayee + 4.2, "Maksajan", "nimi ja", "osoite", "Betalarens", "namn och", "adress");
-        c.TextRight(regular, LabelSize, labelRight, Y(YSignature - 0.7), "Allekirjoitus");
-        c.TextRight(regular, LabelSize, labelRight, Y(YSignature + 2.5), "Underskrift");
-        Labels(YPayerEnd + 3.4, "Tililtä nro", "Från konto nr");
+        Labels(4.6, t.PayeeAccount);
+        Labels(YAccount + 6.2, t.Payee);
+        Labels(YPayee + 4.2, t.Payer);
+        c.TextRight(regular, LabelSize, labelRight, Y(YSignature - 0.7), t.Signature[0]);
+        c.TextRight(regular, LabelSize, labelRight, Y(YSignature + 2.5), t.Signature[1]);
+        Labels(YPayerEnd + 3.4, t.FromAccount);
 
-        c.Text(regular, LabelSize, X(XLabel + 1.5), Y(3.2), "IBAN");
-        c.Text(regular, LabelSize, X(XCentre + 1.3), Y(YReferenceTop + 3.2), "Viitenumero");
-        c.Text(regular, LabelSize, X(XCentre + 1.3), Y(YReferenceTop + 6.0), "Ref. nr");
-        c.Text(regular, LabelSize, X(XCentre + 1.3), Y(YPayerEnd + 3.2), "Eräpäivä");
-        c.Text(regular, LabelSize, X(XCentre + 1.3), Y(YPayerEnd + 6.0), "Förfallodag");
-        c.Text(regular, LabelSize, X(XEuro + 1.3), Y(YPayerEnd + 3.2), "Euro");
+        c.Text(regular, LabelSize, X(XLabel + 1.5), Y(3.2), t.Iban);
+        c.Text(regular, LabelSize, X(XCentre + 1.3), Y(YReferenceTop + 3.2), t.Reference[0]);
+        c.Text(regular, LabelSize, X(XCentre + 1.3), Y(YReferenceTop + 6.0), t.Reference[1]);
+        c.Text(regular, LabelSize, X(XCentre + 1.3), Y(YPayerEnd + 3.2), t.DueDate[0]);
+        c.Text(regular, LabelSize, X(XCentre + 1.3), Y(YPayerEnd + 6.0), t.DueDate[1]);
+        c.Text(regular, LabelSize, X(XEuro + 1.3), Y(YPayerEnd + 3.2), t.Euro);
 
         // Form title, reading upwards beside the payer block.
-        const string title = "TILISIIRTO. GIRERING";
+        string title = t.Title;
         double titleWidth = bold.Width(title, TitleSize);
         c.TextRotated(bold, TitleSize, X(4.6), Y((YPayee + YPayerEnd) / 2) + titleWidth / 2, 90, title);
 
-        for (int i = 0; i < LegalText.Length; i++)
-            c.Text(regular, LegalSize, X(XLabel + 105 + 21.2), Y(YFormEnd + 4.8 + i * 2.45), LegalText[i]);
+        for (int i = 0; i < t.LegalText.Length; i++)
+            c.Text(regular, LegalSize, X(XLabel + 105 + 21.2), Y(YFormEnd + 4.8 + i * 2.45), t.LegalText[i]);
 
         // ---- Variable data -------------------------------------------------------------------
         c.SetFillColor(Color.Black);

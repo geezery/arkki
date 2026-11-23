@@ -10,7 +10,8 @@ public static class FinvoiceRenderer
 
     public static PdfDocument Render(FinvoiceInvoice inv, InvoiceTheme theme)
     {
-        var doc = new PdfDocument { Language = "fi-FI", Compression = theme.Compression };
+        InvoiceTexts t = theme.Texts;
+        var doc = new PdfDocument { Language = t.Language, Compression = theme.Compression };
         doc.Info.Title = $"{inv.InvoiceTypeText} {inv.InvoiceNumber}".Trim();
         doc.Info.Author = inv.Seller.Name;
         doc.Info.Creator = "Arkki.Finvoice";
@@ -37,10 +38,10 @@ public static class FinvoiceRenderer
             Element left = logo is not null
                 ? new ImageBox(logo, Unit.Mm(theme.LogoMaxWidthMm), Unit.Mm(theme.LogoMaxHeightMm))
                 : new TextBlock(inv.Seller.Name, new TextStyle(fonts, 14, Bold: true, Ink: theme.Accent));
-            string pageText = page.PageCount > 0 ? $"Sivu {page.PageNumber} ({page.PageCount})" : "Sivu";
+            string pageText = page.PageCount > 0 ? InvoiceTexts.Format(t.PageNumber, page.PageNumber, page.PageCount) : t.PageNumberUnknownCount;
             var right = new Column(
                 new TextBlock(inv.InvoiceTypeText.ToUpperInvariant(), title, HAlign.Right),
-                new TextBlock($"Nro {inv.InvoiceNumber}   ·   {pageText}", small, HAlign.Right));
+                new TextBlock($"{InvoiceTexts.Format(t.InvoiceNumberShort, inv.InvoiceNumber)}   ·   {pageText}", small, HAlign.Right));
             var head = new Column(new Row().Add(Len.Mm(95), left).Add(Len.Star(), right));
             if (!page.IsFirst) return head.Add(new Spacer(Unit.Mm(2))).Add(new Rule(theme.RuleColor));
 
@@ -57,17 +58,17 @@ public static class FinvoiceRenderer
                 if (!string.IsNullOrWhiteSpace(value))
                     details.AddRow(new TextBlock(name, label), new TextBlock(value, strong ? bodyBold : body));
             }
-            Detail("Laskun päiväys", inv.InvoiceDate is { } d ? FiFormat.Date(d) : null);
-            Detail("Laskun numero", inv.InvoiceNumber);
-            Detail("Eräpäivä", inv.PaymentDueDate is { } due ? FiFormat.Date(due) : null, strong: true);
-            Detail("Viitenumero", reference is null ? null : PaymentReference.Format(reference));
-            Detail("Maksuehto", inv.PaymentTermsText);
-            Detail("Viivästyskorko", inv.OverdueFinePercent is { } fine ? FiFormat.Number(fine, 1, 2) + " %" : inv.OverdueFineText);
-            Detail("Ostajan Y-tunnus", inv.Buyer.BusinessId);
-            Detail("Viitteenne", inv.BuyerReference);
-            Detail("Tilausnumero", inv.OrderIdentifier);
-            Detail("Sopimusnumero", inv.AgreementIdentifier);
-            Detail("Myyjän yhteyshenkilö", inv.Seller.ContactPerson);
+            Detail(t.InvoiceDate, inv.InvoiceDate is { } d ? FiFormat.Date(d) : null);
+            Detail(t.InvoiceNumber, inv.InvoiceNumber);
+            Detail(t.DueDate, inv.PaymentDueDate is { } due ? FiFormat.Date(due) : null, strong: true);
+            Detail(t.Reference, reference is null ? null : PaymentReference.Format(reference));
+            Detail(t.PaymentTerms, inv.PaymentTermsText);
+            Detail(t.OverdueInterest, inv.OverdueFinePercent is { } fine ? FiFormat.Number(fine, 1, 2) + " %" : inv.OverdueFineText);
+            Detail(t.BuyerBusinessId, inv.Buyer.BusinessId);
+            Detail(t.BuyerReference, inv.BuyerReference);
+            Detail(t.OrderNumber, inv.OrderIdentifier);
+            Detail(t.AgreementNumber, inv.AgreementIdentifier);
+            Detail(t.SellerContact, inv.Seller.ContactPerson);
 
             return head
                 .Add(new Spacer(Unit.Mm(11)))
@@ -86,13 +87,13 @@ public static class FinvoiceRenderer
                 new Row { Spacing = Unit.Mm(4) }
                     .Add(Len.Star(1.2), new TextBlock(Join([inv.Seller.Name, .. inv.Seller.AddressLines()]), small))
                     .Add(Len.Star(1.0), new TextBlock(Join(
-                        inv.Seller.BusinessId is { } y ? "Y-tunnus " + y : null,
-                        inv.Seller.VatNumber is { } vat ? "ALV-nro " + vat : null,
-                        inv.SellerHomeTown is { } town ? "Kotipaikka " + town : null), small))
+                        inv.Seller.BusinessId is { } y ? InvoiceTexts.Format(t.SellerBusinessId, y) : null,
+                        inv.Seller.VatNumber is { } vat ? InvoiceTexts.Format(t.SellerVatNumber, vat) : null,
+                        inv.SellerHomeTown is { } town ? InvoiceTexts.Format(t.SellerHomeTown, town) : null), small))
                     .Add(Len.Star(1.7), new TextBlock(Join(inv.SellerPhone, inv.SellerEmail, inv.SellerWeb), small))
                     .Add(Len.Star(1.2), new TextBlock(Join(
                         account is null ? null : Iban.Format(account.Iban),
-                        account?.Bic is { } bic ? "BIC " + bic : null,
+                        account?.Bic is { } bic ? InvoiceTexts.Format(t.Bic, bic) : null,
                         inv.SellerVatRegistrationText), small)));
         }
 
@@ -112,7 +113,7 @@ public static class FinvoiceRenderer
             RowRule = theme.RuleColor,
             CellPaddingY = 2.6,
         };
-        rows.SetHeader(headerCell, "NIMIKE", "KUVAUS", "MÄÄRÄ", "YKS.", "À-HINTA", "ALV %", "VEROTON " + inv.Currency);
+        rows.SetHeader(headerCell, t.RowArticle, t.RowDescription, t.RowQuantity, t.RowUnit, t.RowUnitPrice, t.RowVatRate, InvoiceTexts.Format(t.RowAmount, inv.Currency));
         foreach (FinvoiceRow r in inv.Rows)
         {
             Element description = new TextBlock(r.ArticleName ?? "", body);
@@ -134,16 +135,16 @@ public static class FinvoiceRenderer
             new TableColumn(Len.Mm(21), HAlign.Right), new TableColumn(Len.Mm(24), HAlign.Right),
         ])
         { HeaderRule = theme.RuleColor, CellPaddingY = 1.6 };
-        vat.SetHeader(headerCell, "ALV %", "VEROTON", "ALV", "VEROLLINEN");
+        vat.SetHeader(headerCell, t.VatRate, t.VatBase, t.VatAmount, t.VatTotal);
         foreach (FinvoiceVatSpecification s in inv.VatSpecifications)
             vat.AddRow(body, FiFormat.Number(s.RatePercent, 0, 2), FiFormat.Money(s.BaseAmount), FiFormat.Money(s.VatAmount), FiFormat.Money(s.BaseAmount + s.VatAmount));
 
         var totals = new Table([new TableColumn(Len.Star()), new TableColumn(Len.Mm(30), HAlign.Right)]) { CellPaddingY = 1.6 };
-        if (inv.TotalVatExcluded is { } excl) totals.AddRow(body, "Veroton yhteensä", FiFormat.Money(excl));
-        if (inv.TotalVat is { } vatTotal) totals.AddRow(body, "Arvonlisävero yhteensä", FiFormat.Money(vatTotal));
+        if (inv.TotalVatExcluded is { } excl) totals.AddRow(body, t.TotalVatExcluded, FiFormat.Money(excl));
+        if (inv.TotalVat is { } vatTotal) totals.AddRow(body, t.TotalVat, FiFormat.Money(vatTotal));
         var grand = new TextStyle(fonts, 11, Bold: true, Ink: theme.Accent);
         if (inv.TotalVatIncluded is { } incl)
-            totals.AddRow(new TextBlock("Maksettava yhteensä " + inv.Currency, grand), new TextBlock(FiFormat.Money(incl), grand, HAlign.Right));
+            totals.AddRow(new TextBlock(InvoiceTexts.Format(t.TotalToPay, inv.Currency), grand), new TextBlock(FiFormat.Money(incl), grand, HAlign.Right));
 
         var content = new Column(rows, new Spacer(Unit.Mm(5)),
             new Row { Spacing = Unit.Mm(8) }.Add(Len.Mm(84), vat).Add(Len.Star(), totals).KeepTogether());
@@ -162,9 +163,9 @@ public static class FinvoiceRenderer
             giro.PayeeLines.Add(string.Join(", ", inv.Seller.AddressLines()));
             giro.PayerLines.Add(inv.Buyer.Name);
             giro.PayerLines.AddRange(inv.Buyer.AddressLines());
-            giro.MessageLines.Add($"Laskun numero / Fakturanummer {inv.InvoiceNumber}");
-            if (inv.InvoiceDate is { } invoiceDate) giro.MessageLines.Add($"Laskun päiväys / Fakturadatum {FiFormat.Date(invoiceDate)}");
-            var giroStyle = new GiroStyle { Fonts = fonts };
+            giro.MessageLines.Add(InvoiceTexts.Format(t.GiroInvoiceNumber, inv.InvoiceNumber));
+            if (inv.InvoiceDate is { } invoiceDate) giro.MessageLines.Add(InvoiceTexts.Format(t.GiroInvoiceDate, FiFormat.Date(invoiceDate)));
+            var giroStyle = new GiroStyle { Fonts = fonts, Texts = theme.GiroTexts };
 
             overlay = (canvas, _) =>
             {
@@ -172,7 +173,7 @@ public static class FinvoiceRenderer
                 if (barcode is not null)
                 {
                     canvas.SetFillColor(theme.Muted);
-                    canvas.Text(fonts.Regular, 7.5, margins.Left, slipTop - Unit.Mm(3.2), "Virtuaaliviivakoodi");
+                    canvas.Text(fonts.Regular, 7.5, margins.Left, slipTop - Unit.Mm(3.2), t.VirtualBarcode);
                     canvas.SetFillColor(Color.Black);
                     canvas.Text(fonts.Regular, 8.5, margins.Left + Unit.Mm(26), slipTop - Unit.Mm(3.2), barcode);
                 }

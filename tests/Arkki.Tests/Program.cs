@@ -5,6 +5,7 @@ PaymentFormatTests.Run();
 Code128Tests.Run();
 FinvoiceReaderTests.Run();
 TrueTypeFontTests.Run();
+InvoiceTextsTests.Run();
 InvoiceRenderTests.Run();
 LayoutTests.Run();
 

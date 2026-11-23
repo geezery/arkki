@@ -7,6 +7,9 @@ public sealed class GiroStyle
 {
     public required FontFamily Fonts { get; init; }
 
+    /// <summary>Pre-printed texts. Defaults to the model form's Finnish and Swedish wording.</summary>
+    public GiroTexts Texts { get; init; } = GiroTexts.Standard;
+
     /// <summary>Colour of the pre-printed parts (lines and guide texts). The guide allows blue or black.</summary>
     public Color FormColor { get; init; } = Color.Black;
 

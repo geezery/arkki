@@ -18,6 +18,12 @@ public sealed class InvoiceTheme
     public Color Muted { get; init; } = Color.Gray(0.42);
     public Color RuleColor { get; init; } = Color.Gray(0.80);
 
+    /// <summary>Labels printed on the invoice. Defaults to <see cref="InvoiceTexts.Finnish"/>.</summary>
+    public InvoiceTexts Texts { get; init; } = InvoiceTexts.Finnish;
+
+    /// <summary>Pre-printed texts of the credit transfer form. Defaults to <see cref="GiroTexts.Standard"/>.</summary>
+    public GiroTexts GiroTexts { get; init; } = GiroTexts.Standard;
+
     /// <summary>Print the credit transfer form and bank barcode on the last page.</summary>
     public bool IncludeGiro { get; init; } = true;
 

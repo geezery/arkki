@@ -51,12 +51,17 @@ src/Arkki.Pdf/
   Internal/      PDF object writer, byte buffer
 src/Arkki.Finvoice/                                                 (Arkki.Finvoice)
   Payments/      Iban, PaymentReference, BankBarcode
-  Formatting/    FiFormat
+  Formatting/    FiFormat, JSON text loader
   Messages/      Finvoice model and FinvoiceReader
-  Giro/          credit transfer form
-  Invoices/      FinvoiceRenderer, InvoiceTheme
+  Giro/          credit transfer form, GiroTexts + giro-texts.json
+  Invoices/      FinvoiceRenderer, InvoiceTheme, InvoiceTexts + invoice-texts-fi.json
 tests/Arkki.Tests/  one file per feature, same folders
 ```
+
+Printed texts are data, not code. The invoice labels and the form's pre-printed wording are
+embedded JSON files loaded into `InvoiceTexts` and `GiroTexts`; a language is one more JSON file
+passed to `InvoiceTexts.Load`, and single labels can be changed with a `with` expression. Unknown
+or missing keys fail at load time.
 
 ## API model: a data tree with chainable modifiers, not nested lambdas
 
