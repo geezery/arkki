@@ -13,7 +13,7 @@ binaries, no NuGet dependencies. Licensed under the Mozilla Public License 2.0.
 
 | Project | Contents |
 |---|---|
-| `src/Arkki.Pdf` | The library. PDF writer, TrueType embedding with subsetting, PNG/JPEG images, vector Code 128, an immediate-mode canvas and a paginating layout engine |
+| `src/Arkki.Pdf` | The library. PDF writer, TrueType embedding with subsetting, PNG/JPEG images, vector barcodes (Code 128, EAN-13, QR code), an immediate-mode canvas and a paginating layout engine |
 | `samples/Arkki.Samples.Finvoice` | Sample, not shipped. Finvoice 3.0 reader, IBAN and reference validation, bank barcode, credit transfer form and an invoice renderer. Copy it into your application and adapt it |
 | `samples/Arkki.Samples.Invoice` | Console program that renders the sample invoice and times it |
 
@@ -50,6 +50,29 @@ var line = new Row().Add(Len.Star(), new TextBlock("Invoice 1187", body))
 
 Italic needs its own font file: `new FontFamily(regular, bold, Italic: italic, BoldItalic: boldItalic)`.
 Without one, italic text falls back to the upright face.
+
+A table cell can cover several columns, and a `PageBreak` starts a new page:
+
+```csharp
+table.AddRow(new TextBlock("Parts", body with { Bold = true }).SpanColumns(2));
+var report = new Column(balanceSheet, new PageBreak(), incomeStatement);
+```
+
+## Barcodes
+
+Code 128, EAN-13 and QR code are built in. A barcode is a grid of modules drawn as vector
+rectangles; `BarcodeBox` sizes it in a layout and keeps the quiet zone scanners need:
+
+```csharp
+using Arkki.Pdf.Barcodes;
+
+var qr = new BarcodeBox(new QrCode(QrErrorCorrection.M), "https://example.com/contracts/7", Unit.Mm(20), Unit.Mm(20));
+var ean = new BarcodeBox(new Ean13(), "400638133393", Unit.Mm(37), Unit.Mm(20));
+canvas.Barcode(new Code128().Encode("A-1187"), x, y, width, height);   // without quiet zone
+```
+
+Other symbologies plug in by implementing `IBarcodeSymbology`, which turns text into a
+`BarcodeMatrix`. The digits under an EAN-13 are not drawn; set them as text where they belong.
 
 ## Merging PDF files
 

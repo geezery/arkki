@@ -17,7 +17,7 @@
 (sample)         Arkki.Samples.Finvoice: reader -> model -> renderer, giro form, bank barcode
 Arkki.Pdf        Layout:   Element tree -> Fragments -> pages          (FlowDocument)
                  Canvas:   immediate-mode drawing, top-left origin     (PdfCanvas)
-                 Objects:  fonts, images, barcodes                     (PdfFont, PdfImage, Code128)
+                 Objects:  fonts, images, barcodes                     (PdfFont, PdfImage, barcodes)
                  Writer:   objects, streams, xref                      (PdfWriter, internal)
                  Reader:   xref, objects, page tree of existing files  (PdfReader)
                  Merging:  copy pages and what they reference          (PageImporter, internal)
@@ -54,13 +54,13 @@ src/Arkki.Pdf/
   Drawing/       PdfCanvas, Color, Unit, PageSize                   (Arkki.Pdf)
   Fonts/         TrueTypeFont (Arkki.Pdf.Fonts), PdfFont (Arkki.Pdf)
   Images/        PdfImage, lossless image encoder                   (Arkki.Pdf)
-  Barcodes/      Code128                                            (Arkki.Pdf.Barcodes)
+  Barcodes/      BarcodeMatrix, IBarcodeSymbology, Code128, Ean13, QrCode (Arkki.Pdf.Barcodes)
   Layout/        element tree and pagination                        (Arkki.Pdf.Layout)
     Core/        Element, Fragment, LayoutResult, Len, modifiers
     Text/        TextBlock, TextStyle, FontFamily, line breaking
     Containers/  Column, Row, Box, KeepTogether
-    Content/     Spacer, Rule, ImageBox, Custom
-    Tables/      Table, TableColumn
+    Content/     Spacer, Rule, ImageBox, BarcodeBox, PageBreak, Custom
+    Tables/      Table, TableColumn, ColumnSpan
     Pagination/  FlowDocument, Margins, PageContext
   Reading/       PdfReader, parser, object model                    (Arkki.Pdf.Reading)
   Merging/       PageImporter                                       (Arkki.Pdf.Merging, internal)
@@ -126,14 +126,11 @@ Open points, to be checked against a printed original:
 
 Library:
 
-1. SVG: the subset that logos and simple drawings use, drawn as vectors.
-2. Table cells spanning columns, a forced page break, table rows that split across pages.
-3. Barcodes: QR code (ISO/IEC 18004) and EAN-13 next to Code 128, plus an extension point for
-   other symbologies. Others (Data Matrix, PDF417 and so on) are left to users.
-4. PDF/A-3b (XMP, output intent) and embedded file attachments; veraPDF in CI.
-5. Kerning (GPOS/kern), hyphenation and CFF-based OpenType fonts.
-6. Templates as data (JSON) and a lambda-style builder on top of the element tree.
-7. Tagged PDF / PDF/UA.
+1. Table rows that split across pages.
+2. PDF/A-3b (XMP, output intent) and embedded file attachments; veraPDF in CI.
+3. Kerning (GPOS/kern), hyphenation and CFF-based OpenType fonts.
+4. Templates as data (JSON) and a lambda-style builder on top of the element tree.
+5. Tagged PDF / PDF/UA.
 
 Finvoice sample: payment QR on the form, Finvoice XML attached to a PDF/A-3 invoice, Swedish
 and English texts.

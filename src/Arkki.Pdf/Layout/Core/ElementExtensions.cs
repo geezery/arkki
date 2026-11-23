@@ -13,4 +13,7 @@ public static class ElementExtensions
     public static Box Border(this Element e, Color color, double width = 0.5) => new(e) { BorderColor = color, BorderWidth = width };
 
     public static KeepTogether KeepTogether(this Element e) => new(e);
+
+    /// <summary>Makes a table cell cover <paramref name="columns"/> adjacent columns.</summary>
+    public static ColumnSpan SpanColumns(this Element e, int columns) => new(e, columns);
 }

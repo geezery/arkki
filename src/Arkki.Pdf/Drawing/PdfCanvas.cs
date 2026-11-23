@@ -127,6 +127,26 @@ public sealed class PdfCanvas
         _b.Ascii("f\n");
     }
 
+    /// <summary>
+    /// Draws a barcode's dark modules into the given rectangle, without its quiet zone. Each row's
+    /// runs of dark modules become one rectangle; all of them are filled once.
+    /// </summary>
+    public void Barcode(Barcodes.BarcodeMatrix matrix, double x, double y, double width, double height)
+    {
+        double mw = width / matrix.Columns, mh = height / matrix.Rows;
+        for (int row = 0; row < matrix.Rows; row++)
+        {
+            for (int col = 0; col < matrix.Columns;)
+            {
+                if (!matrix[col, row]) { col++; continue; }
+                int start = col;
+                while (col < matrix.Columns && matrix[col, row]) col++;
+                _b.Num(x + start * mw).Sp().Num(y + row * mh).Sp().Num((col - start) * mw).Sp().Num(mh).Ascii(" re ");
+            }
+        }
+        _b.Ascii("f\n");
+    }
+
     public void Save()
     {
         _depth++;

@@ -3,10 +3,42 @@ namespace Arkki.Pdf.Barcodes;
 /// <summary>
 /// Code 128 encoder (ISO/IEC 15417). Produces bar/space module widths that
 /// <see cref="PdfCanvas.Bars"/> draws as vector rectangles, so the symbol is resolution independent.
+/// As an <see cref="IBarcodeSymbology"/> it encodes an even number of digits in character set C
+/// and other printable ASCII text in character set B.
 /// </summary>
-public static class Code128
+public sealed class Code128 : IBarcodeSymbology
 {
     public const int StartB = 104, StartC = 105, Stop = 106;
+
+    public BarcodeMatrix Encode(string text)
+    {
+        bool setC = text.Length > 0 && text.Length % 2 == 0 && text.All(char.IsAsciiDigit);
+        byte[] modules = ToModules(setC ? EncodeSetC(text) : EncodeSetB(text));
+        var m = new BarcodeMatrix(TotalModules(modules), 1, quietZone: 10);
+        int x = 0;
+        for (int i = 0; i < modules.Length; i++)
+        {
+            for (int k = 0; k < modules[i]; k++) m[x + k, 0] = (i & 1) == 0;
+            x += modules[i];
+        }
+        return m;
+    }
+
+    /// <summary>Symbol values for printable ASCII text in character set B: start, data, check, stop.</summary>
+    public static int[] EncodeSetB(ReadOnlySpan<char> text)
+    {
+        if (text.Length == 0) throw new ArgumentException("Nothing to encode.", nameof(text));
+        var values = new int[text.Length + 3];
+        values[0] = StartB;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (text[i] is < ' ' or > '~') throw new ArgumentException("Character set B accepts printable ASCII only.", nameof(text));
+            values[i + 1] = text[i] - ' ';
+        }
+        values[^2] = CheckValue(values.AsSpan(0, values.Length - 2));
+        values[^1] = Stop;
+        return values;
+    }
 
     // Bar/space widths for symbol values 0..106; each is 11 modules except the stop pattern (13).
     private static readonly string[] Patterns =

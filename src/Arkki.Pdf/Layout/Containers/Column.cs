@@ -30,7 +30,9 @@ public sealed class Column : Element
             var rest = new List<Element>(Children.Count - i);
             if (r.Remainder is not null) rest.Add(r.Remainder);
             rest.AddRange(Children.Skip(i + 1));
-            return new LayoutResult(LayoutStatus.Partial, new StackFragment(placed, width, y), new Column(rest) { Spacing = Spacing });
+            // After a page break as the last child nothing of this column is left for the next page.
+            Element? remainder = rest.Count == 0 ? null : new Column(rest) { Spacing = Spacing };
+            return new LayoutResult(LayoutStatus.Partial, new StackFragment(placed, width, y), remainder);
         }
         return LayoutResult.Full(new StackFragment(placed, width, y));
     }
