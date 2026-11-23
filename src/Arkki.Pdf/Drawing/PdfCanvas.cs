@@ -2,35 +2,6 @@ using Arkki.Pdf.Internal;
 
 namespace Arkki.Pdf;
 
-/// <summary>An RGB color with components in the 0..1 range.</summary>
-public readonly record struct Color(double R, double G, double B)
-{
-    public static readonly Color Black = new(0, 0, 0);
-    public static readonly Color White = new(1, 1, 1);
-    public static Color Gray(double level) => new(level, level, level);
-
-    /// <summary>Parses "#RRGGBB" or "RRGGBB".</summary>
-    public static Color FromHex(string hex)
-    {
-        ReadOnlySpan<char> h = hex.AsSpan().TrimStart('#');
-        int v = int.Parse(h, System.Globalization.NumberStyles.HexNumber);
-        return new(((v >> 16) & 255) / 255.0, ((v >> 8) & 255) / 255.0, (v & 255) / 255.0);
-    }
-}
-
-/// <summary>Unit conversions. All Arkki coordinates are in PDF points (1/72 inch).</summary>
-public static class Unit
-{
-    public const double PointsPerMm = 72.0 / 25.4;
-    public static double Mm(double mm) => mm * PointsPerMm;
-    public static double Inch(double inches) => inches * 72.0;
-}
-
-public static class PageSize
-{
-    public static readonly (double Width, double Height) A4 = (Unit.Mm(210), Unit.Mm(297));
-}
-
 /// <summary>
 /// Immediate-mode drawing surface for one page. The origin is the top-left corner of the page and
 /// y grows downwards; units are points. Every call appends PDF operators directly to the page's

@@ -63,7 +63,7 @@ dotnet run -c Release --project tests/Arkki.Tests
 dotnet run -c Release --project samples/Arkki.Samples.Invoice
 ```
 
-The sample writes `samples/output/lasku.pdf` and prints a render time. On a two-core cloud VM the
+The sample writes `samples/output/invoice.pdf` and prints a render time. On a two-core cloud VM the
 three-page, 44-row sample invoice takes about 2 ms with `CompressionLevel.Fastest` and about 5 ms
 with `Optimal`, single-threaded, at roughly 100 kB including the logo and two subset fonts.
 

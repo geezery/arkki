@@ -1,17 +1,5 @@
 namespace Arkki.Pdf.Layout;
 
-public readonly record struct PageContext(int PageNumber, int PageCount)
-{
-    public bool IsFirst => PageNumber == 1;
-    public bool IsLast => PageNumber == PageCount;
-}
-
-public readonly record struct Margins(double Left, double Top, double Right, double Bottom)
-{
-    public static Margins Mm(double left, double top, double right, double bottom) =>
-        new(Unit.Mm(left), Unit.Mm(top), Unit.Mm(right), Unit.Mm(bottom));
-}
-
 /// <summary>
 /// Paginates an element tree. Layout runs first and produces positioned fragments for every
 /// page; drawing happens afterwards, when the total page count is known, so headers and footers
@@ -101,19 +89,4 @@ public sealed class FlowDocument
 
     private double Measure(Element? element, double width) =>
         element?.Layout(width, PageHeight).Fragment?.Height ?? 0;
-}
-
-/// <summary>Chainable modifiers: wrap an element instead of nesting builder lambdas.</summary>
-public static class ElementExtensions
-{
-    public static Box Padding(this Element e, double all) => new(e) { Left = all, Top = all, Right = all, Bottom = all };
-
-    public static Box Padding(this Element e, double left, double top, double right, double bottom) =>
-        new(e) { Left = left, Top = top, Right = right, Bottom = bottom };
-
-    public static Box Background(this Element e, Color color) => new(e) { Background = color };
-
-    public static Box Border(this Element e, Color color, double width = 0.5) => new(e) { BorderColor = color, BorderWidth = width };
-
-    public static KeepTogether KeepTogether(this Element e) => new(e);
 }

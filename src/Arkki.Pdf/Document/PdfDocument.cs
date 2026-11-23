@@ -6,31 +6,6 @@ using Arkki.Pdf.Internal;
 
 namespace Arkki.Pdf;
 
-public sealed class PdfInfo
-{
-    public string? Title { get; set; }
-    public string? Author { get; set; }
-    public string? Subject { get; set; }
-    public string? Keywords { get; set; }
-    public string? Creator { get; set; }
-
-    /// <summary>Set to a fixed value to get byte-identical output for identical input.</summary>
-    public DateTimeOffset? CreationDate { get; set; }
-}
-
-public sealed class PdfPage
-{
-    internal PdfPage(PdfDocument document, double width, double height)
-    {
-        Width = width; Height = height;
-        Canvas = new PdfCanvas(document, height);
-    }
-
-    public double Width { get; }
-    public double Height { get; }
-    public PdfCanvas Canvas { get; }
-}
-
 /// <summary>
 /// A PDF document under construction. Add fonts, images and pages, draw on the page canvases,
 /// then call <see cref="Save"/>. A document instance is not thread-safe, but any number of

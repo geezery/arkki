@@ -1,37 +1,7 @@
 using Arkki.Pdf;
 using Arkki.Pdf.Barcodes;
-using Arkki.Pdf.Layout;
 
 namespace Arkki.Finvoice;
-
-public sealed class GiroData
-{
-    /// <summary>Payee accounts as printed; the barcode can carry only one of them.</summary>
-    public List<FinvoiceAccount> Accounts { get; } = [];
-    public List<string> PayeeLines { get; } = [];
-    public List<string> PayerLines { get; } = [];
-    public List<string> MessageLines { get; } = [];
-    public string? Reference { get; set; }
-    public DateOnly? DueDate { get; set; }
-    public decimal? Amount { get; set; }
-
-    /// <summary>54-digit bank barcode data, or null to leave the barcode out.</summary>
-    public string? Barcode { get; set; }
-}
-
-public sealed class GiroStyle
-{
-    public required FontFamily Fonts { get; init; }
-
-    /// <summary>Colour of the pre-printed parts (lines and guide texts). The guide allows blue or black.</summary>
-    public Color FormColor { get; init; } = Color.Black;
-
-    /// <summary>Barcode length in mm. The guide allows 70–105 mm and prefers the long end.</summary>
-    public double BarcodeWidthMm { get; init; } = 104;
-
-    /// <summary>Barcode height in mm. The guide allows 10.0–12.7 mm.</summary>
-    public double BarcodeHeightMm { get; init; } = 12;
-}
 
 /// <summary>
 /// The Finnish credit transfer form (tilisiirtolomake) as specified in Finance Finland's

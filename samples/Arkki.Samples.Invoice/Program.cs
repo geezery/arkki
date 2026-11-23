@@ -7,7 +7,7 @@ using Arkki.Pdf.Fonts;
 string root = FindRepositoryRoot();
 string xmlPath = args.Length > 0 ? args[0] : Path.Combine(root, "samples", "data", "finvoice-sample.xml");
 string logoPath = args.Length > 1 ? args[1] : Path.Combine(root, "samples", "data", "logo.png");
-string outPath = args.Length > 2 ? args[2] : Path.Combine(root, "samples", "output", "lasku.pdf");
+string outPath = args.Length > 2 ? args[2] : Path.Combine(root, "samples", "output", "invoice.pdf");
 
 // Fonts are parsed once and shared by every document rendered in the process.
 var theme = new InvoiceTheme

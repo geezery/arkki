@@ -28,6 +28,36 @@ Arkki.Pdf        Layout:   Element tree -> Fragments -> pages          (FlowDocu
   The answer is `Full`, `Partial` (with a remainder for the next page) or `None`. Layout
   produces fragments; drawing happens after pagination, so "page 2 (5)" needs no second pass.
 
+## Source layout
+
+Files are grouped by feature, one public type per file. Namespaces are coarser than folders:
+each package has its root namespace, and `Arkki.Pdf` adds `Fonts`, `Images`, `Barcodes` and
+`Layout`. Folders below those never add a namespace, so one `using` covers a feature area.
+
+```
+src/Arkki.Pdf/
+  Document/      PdfDocument, PdfPage, PdfInfo                      (Arkki.Pdf)
+  Drawing/       PdfCanvas, Color, Unit, PageSize                   (Arkki.Pdf)
+  Fonts/         TrueTypeFont, PdfFont                              (Arkki.Pdf.Fonts)
+  Images/        PdfImage                                           (Arkki.Pdf.Images)
+  Barcodes/      Code128                                            (Arkki.Pdf.Barcodes)
+  Layout/        element tree and pagination                        (Arkki.Pdf.Layout)
+    Core/        Element, Fragment, LayoutResult, Len, modifiers
+    Text/        TextBlock, TextStyle, FontFamily, line breaking
+    Containers/  Column, Row, Box, KeepTogether
+    Content/     Spacer, Rule, ImageBox, Custom
+    Tables/      Table, TableColumn
+    Pagination/  FlowDocument, Margins, PageContext
+  Internal/      PDF object writer, byte buffer
+src/Arkki.Finvoice/                                                 (Arkki.Finvoice)
+  Payments/      Iban, PaymentReference, BankBarcode
+  Formatting/    FiFormat
+  Messages/      Finvoice model and FinvoiceReader
+  Giro/          credit transfer form
+  Invoices/      FinvoiceRenderer, InvoiceTheme
+tests/Arkki.Tests/  one file per feature, same folders
+```
+
 ## API model: a data tree with chainable modifiers, not nested lambdas
 
 Three styles were considered.

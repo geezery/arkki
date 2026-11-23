@@ -1,7 +1,5 @@
 namespace Arkki.Pdf.Layout;
 
-public sealed record TableColumn(Len Width, HAlign Align = HAlign.Left);
-
 /// <summary>
 /// A table that breaks between rows and repeats its header on every page it continues on.
 /// Cells are ordinary elements, so a cell can hold wrapped text, an image or a nested layout.
