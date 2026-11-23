@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Finvoice Version="3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="Finvoice3.0.xsd">
+  <MessageTransmissionDetails>
+    <MessageSenderDetails><FromIdentifier SchemeID="0216">003712345671</FromIdentifier><FromIntermediator>NDEAFIHH</FromIntermediator></MessageSenderDetails>
+    <MessageReceiverDetails><ToIdentifier SchemeID="0216">003776543213</ToIdentifier><ToIntermediator>OKOYFIHH</ToIntermediator></MessageReceiverDetails>
+    <MessageDetails><MessageIdentifier>20261187</MessageIdentifier><MessageTimeStamp>2026-11-23T09:15:00+02:00</MessageTimeStamp></MessageDetails>
+  </MessageTransmissionDetails>
+  <SellerPartyDetails>
+    <SellerPartyIdentifier>1234567-1</SellerPartyIdentifier>
+    <SellerOrganisationName>Esimerkki Konepaja Oy</SellerOrganisationName>
+    <SellerOrganisationTaxCode>FI12345671</SellerOrganisationTaxCode>
+    <SellerPostalAddressDetails><SellerStreetName>Teollisuuskatu 12</SellerStreetName><SellerTownName>Tampere</SellerTownName><SellerPostCodeIdentifier>33100</SellerPostCodeIdentifier><CountryCode>FI</CountryCode><CountryName>Suomi</CountryName></SellerPostalAddressDetails>
+  </SellerPartyDetails>
+  <SellerContactPersonName>Maija Mallikas</SellerContactPersonName>
+  <SellerInformationDetails>
+    <SellerHomeTownName>Tampere</SellerHomeTownName>
+    <SellerVatRegistrationText>Alv.Rek.</SellerVatRegistrationText>
+    <SellerPhoneNumber>+358 40 123 4567</SellerPhoneNumber>
+    <SellerCommonEmailaddressIdentifier>laskutus@esimerkkikonepaja.example</SellerCommonEmailaddressIdentifier>
+    <SellerWebaddressIdentifier>www.esimerkkikonepaja.example</SellerWebaddressIdentifier>
+    <SellerAccountDetails><SellerAccountID IdentificationSchemeName="IBAN">FI2112345600000785</SellerAccountID><SellerBic IdentificationSchemeName="BIC">NDEAFIHH</SellerBic></SellerAccountDetails>
+  </SellerInformationDetails>
+  <BuyerPartyDetails>
+    <BuyerPartyIdentifier>7654321-3</BuyerPartyIdentifier>
+    <BuyerOrganisationName>Mallitilaaja Oy Ab</BuyerOrganisationName>
+    <BuyerOrganisationTaxCode>FI76543213</BuyerOrganisationTaxCode>
+    <BuyerPostalAddressDetails><BuyerStreetName>Satamakatu 4 B 17</BuyerStreetName><BuyerTownName>Jyväskylä</BuyerTownName><BuyerPostCodeIdentifier>40100</BuyerPostCodeIdentifier><CountryCode>FI</CountryCode><CountryName>Suomi</CountryName></BuyerPostalAddressDetails>
+  </BuyerPartyDetails>
+  <BuyerContactPersonName>Åke Öhman</BuyerContactPersonName>
+  <InvoiceDetails>
+    <InvoiceTypeCode>INV01</InvoiceTypeCode>
+    <InvoiceTypeText>Lasku</InvoiceTypeText>
+    <OriginCode>Original</OriginCode>
+    <InvoiceNumber>20261187</InvoiceNumber>
+    <InvoiceDate Format="CCYYMMDD">20261123</InvoiceDate>
+    <OrderIdentifier>PO-2026-0457</OrderIdentifier>
+    <AgreementIdentifier>SOP-2025-018</AgreementIdentifier>
+    <BuyerReferenceIdentifier>Å. Öhman / linja 3 huoltoseisokki</BuyerReferenceIdentifier>
+    <InvoiceTotalVatExcludedAmount AmountCurrencyIdentifier="EUR">100884,58</InvoiceTotalVatExcludedAmount>
+    <InvoiceTotalVatAmount AmountCurrencyIdentifier="EUR">25715,49</InvoiceTotalVatAmount>
+    <InvoiceTotalVatIncludedAmount AmountCurrencyIdentifier="EUR">126600,07</InvoiceTotalVatIncludedAmount>
+    <VatSpecificationDetails><VatBaseAmount AmountCurrencyIdentifier="EUR">100800,58</VatBaseAmount><VatRatePercent>25,5</VatRatePercent><VatCode>S</VatCode><VatRateAmount AmountCurrencyIdentifier="EUR">25704,15</VatRateAmount></VatSpecificationDetails>
+    <VatSpecificationDetails><VatBaseAmount AmountCurrencyIdentifier="EUR">84,00</VatBaseAmount><VatRatePercent>13,5</VatRatePercent><VatCode>S</VatCode><VatRateAmount AmountCurrencyIdentifier="EUR">11,34</VatRateAmount></VatSpecificationDetails>
+    <InvoiceFreeText>Kiitos tilauksestanne. Huomautukset kahdeksan päivän kuluessa laskun päiväyksestä.</InvoiceFreeText>
+    <PaymentTermsDetails>
+      <PaymentTermsFreeText>14 päivää netto</PaymentTermsFreeText>
+      <InvoiceDueDate Format="CCYYMMDD">20261207</InvoiceDueDate>
+      <PaymentOverDueFineDetails><PaymentOverDueFineFreeText>Viivästyskorko 10,0 %</PaymentOverDueFineFreeText><PaymentOverDueFinePercent>10,0</PaymentOverDueFinePercent></PaymentOverDueFineDetails>
+    </PaymentTermsDetails>
+  </InvoiceDetails>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1001</ArticleIdentifier>
+    <ArticleName>Koneistus, CNC-sorvaus</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">3</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">86,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">65,79</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">258,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">323,79</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1002</ArticleIdentifier>
+    <ArticleName>Koneistus, 5-akselinen jyrsintä</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">6</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">112,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">171,36</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">672,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">843,36</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1010</ArticleIdentifier>
+    <ArticleName>Hitsaustyö, MIG/MAG</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">212</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">74,50</UnitPriceAmount>
+    <RowFreeText>Työ sisältää railon valmistelun, hitsauksen WPS 135-01 mukaisesti sekä silmämääräisen tarkastuksen (VT) standardin SFS-EN ISO 5817 hitsiluokan C mukaan. Tarkastuspöytäkirja toimitetaan erikseen sähköpostitse.</RowFreeText>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">4027,47</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">15794,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">19821,47</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1011</ArticleIdentifier>
+    <ArticleName>Hitsaustyö, TIG, ruostumaton teräs</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">2,5</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">82,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">52,28</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">205,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">257,28</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2001</ArticleIdentifier>
+    <ArticleName>Teräslevy S355 10 mm, polttoleikattu</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kg">12</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">2,35</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">7,19</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">28,20</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">35,39</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2002</ArticleIdentifier>
+    <ArticleName>Pyörötanko 42CrMo4 Ø60</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">120</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">48,90</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">1496,34</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">5868,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">7364,34</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2003</ArticleIdentifier>
+    <ArticleName>Alumiiniprofiili 6082-T6 40x40</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">2</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">13,75</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">7,01</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">27,50</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">34,51</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2010</ArticleIdentifier>
+    <ArticleName>Ruostumaton putki EN 1.4404 Ø48,3x2,6</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">184</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">27,40</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">1285,61</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">5041,60</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">6327,21</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3001</ArticleIdentifier>
+    <ArticleName>Kuulalaakeri 6208-2RS</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">4</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">18,60</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">18,97</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">74,40</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">93,37</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3002</ArticleIdentifier>
+    <ArticleName>Kiilahihna SPA 1500</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">5</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">14,20</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">18,11</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">71,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">89,11</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3005</ArticleIdentifier>
+    <ArticleName>Kuusioruuvi M12x60 10.9 sinkitty</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">6</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">0,42</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">0,64</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">2,52</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">3,16</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3006</ArticleIdentifier>
+    <ArticleName>Lukkomutteri M12 DIN 985</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">9</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">0,18</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">0,41</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">1,62</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">2,03</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>PI-4001</ArticleIdentifier>
+    <ArticleName>Pintakäsittely, jauhemaalaus RAL 7016</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m2">9,4</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">24,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">57,53</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">225,60</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">283,13</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>PI-4002</ArticleIdentifier>
+    <ArticleName>Pintakäsittely, kuumasinkitys</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kg">4</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">0,95</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">0,97</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">3,80</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">4,77</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>SU-5001</ArticleIdentifier>
+    <ArticleName>Suunnittelutyö, mekaniikkasuunnittelu</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">3,2</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">96,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">78,34</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">307,20</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">385,54</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KU-6001</ArticleIdentifier>
+    <ArticleName>Rahti ja pakkaus</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">120</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">65,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">1989,00</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">7800,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">9789,00</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KI-7001</ArticleIdentifier>
+    <ArticleName>Ammattikirjallisuus: Hitsaajan käsikirja</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">1</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">42,00</UnitPriceAmount>
+    <RowVatRatePercent>13,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">5,67</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">42,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">47,67</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1001</ArticleIdentifier>
+    <ArticleName>Koneistus, CNC-sorvaus</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">3</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">86,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">65,79</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">258,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">323,79</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1002</ArticleIdentifier>
+    <ArticleName>Koneistus, 5-akselinen jyrsintä</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">6</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">112,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">171,36</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">672,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">843,36</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1010</ArticleIdentifier>
+    <ArticleName>Hitsaustyö, MIG/MAG</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">212</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">74,50</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">4027,47</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">15794,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">19821,47</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1011</ArticleIdentifier>
+    <ArticleName>Hitsaustyö, TIG, ruostumaton teräs</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">2,5</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">82,00</UnitPriceAmount>
+    <RowFreeText>Toimitus: työnumero 2026-0412, piirustus KP-88213 rev. C</RowFreeText>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">52,28</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">205,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">257,28</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2001</ArticleIdentifier>
+    <ArticleName>Teräslevy S355 10 mm, polttoleikattu</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kg">12</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">2,35</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">7,19</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">28,20</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">35,39</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2002</ArticleIdentifier>
+    <ArticleName>Pyörötanko 42CrMo4 Ø60</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">120</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">48,90</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">1496,34</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">5868,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">7364,34</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2003</ArticleIdentifier>
+    <ArticleName>Alumiiniprofiili 6082-T6 40x40</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">2</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">13,75</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">7,01</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">27,50</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">34,51</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2010</ArticleIdentifier>
+    <ArticleName>Ruostumaton putki EN 1.4404 Ø48,3x2,6</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">184</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">27,40</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">1285,61</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">5041,60</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">6327,21</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3001</ArticleIdentifier>
+    <ArticleName>Kuulalaakeri 6208-2RS</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">4</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">18,60</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">18,97</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">74,40</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">93,37</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3002</ArticleIdentifier>
+    <ArticleName>Kiilahihna SPA 1500</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">5</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">14,20</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">18,11</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">71,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">89,11</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3005</ArticleIdentifier>
+    <ArticleName>Kuusioruuvi M12x60 10.9 sinkitty</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">6</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">0,42</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">0,64</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">2,52</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">3,16</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3006</ArticleIdentifier>
+    <ArticleName>Lukkomutteri M12 DIN 985</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">9</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">0,18</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">0,41</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">1,62</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">2,03</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>PI-4001</ArticleIdentifier>
+    <ArticleName>Pintakäsittely, jauhemaalaus RAL 7016</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m2">9,4</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">24,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">57,53</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">225,60</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">283,13</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>PI-4002</ArticleIdentifier>
+    <ArticleName>Pintakäsittely, kuumasinkitys</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kg">4</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">0,95</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">0,97</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">3,80</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">4,77</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>SU-5001</ArticleIdentifier>
+    <ArticleName>Suunnittelutyö, mekaniikkasuunnittelu</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">3,2</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">96,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">78,34</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">307,20</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">385,54</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KU-6001</ArticleIdentifier>
+    <ArticleName>Rahti ja pakkaus</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">120</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">65,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">1989,00</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">7800,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">9789,00</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KI-7001</ArticleIdentifier>
+    <ArticleName>Ammattikirjallisuus: Hitsaajan käsikirja</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">1</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">42,00</UnitPriceAmount>
+    <RowVatRatePercent>13,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">5,67</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">42,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">47,67</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1001</ArticleIdentifier>
+    <ArticleName>Koneistus, CNC-sorvaus</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">3</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">86,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">65,79</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">258,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">323,79</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1002</ArticleIdentifier>
+    <ArticleName>Koneistus, 5-akselinen jyrsintä</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">6</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">112,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">171,36</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">672,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">843,36</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1010</ArticleIdentifier>
+    <ArticleName>Hitsaustyö, MIG/MAG</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">212</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">74,50</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">4027,47</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">15794,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">19821,47</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>KP-1011</ArticleIdentifier>
+    <ArticleName>Hitsaustyö, TIG, ruostumaton teräs</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="h">2,5</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">82,00</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">52,28</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">205,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">257,28</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2001</ArticleIdentifier>
+    <ArticleName>Teräslevy S355 10 mm, polttoleikattu</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kg">12</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">2,35</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">7,19</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">28,20</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">35,39</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2002</ArticleIdentifier>
+    <ArticleName>Pyörötanko 42CrMo4 Ø60</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">120</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">48,90</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">1496,34</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">5868,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">7364,34</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2003</ArticleIdentifier>
+    <ArticleName>Alumiiniprofiili 6082-T6 40x40</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">2</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">13,75</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">7,01</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">27,50</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">34,51</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>MA-2010</ArticleIdentifier>
+    <ArticleName>Ruostumaton putki EN 1.4404 Ø48,3x2,6</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="m">184</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">27,40</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">1285,61</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">5041,60</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">6327,21</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3001</ArticleIdentifier>
+    <ArticleName>Kuulalaakeri 6208-2RS</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">4</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">18,60</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">18,97</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">74,40</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">93,37</RowAmount>
+  </InvoiceRow>
+  <InvoiceRow>
+    <ArticleIdentifier>OS-3002</ArticleIdentifier>
+    <ArticleName>Kiilahihna SPA 1500</ArticleName>
+    <DeliveredQuantity QuantityUnitCode="kpl">5</DeliveredQuantity>
+    <UnitPriceAmount AmountCurrencyIdentifier="EUR">14,20</UnitPriceAmount>
+    <RowVatRatePercent>25,5</RowVatRatePercent>
+    <RowVatAmount AmountCurrencyIdentifier="EUR">18,11</RowVatAmount>
+    <RowVatExcludedAmount AmountCurrencyIdentifier="EUR">71,00</RowVatExcludedAmount>
+    <RowAmount AmountCurrencyIdentifier="EUR">89,11</RowAmount>
+  </InvoiceRow>
+  <EpiDetails>
+    <EpiIdentificationDetails><EpiDate Format="CCYYMMDD">20261123</EpiDate><EpiReference>20261187</EpiReference></EpiIdentificationDetails>
+    <EpiPartyDetails>
+      <EpiBfiPartyDetails><EpiBfiIdentifier IdentificationSchemeName="BIC">NDEAFIHH</EpiBfiIdentifier></EpiBfiPartyDetails>
+      <EpiBeneficiaryPartyDetails><EpiNameAddressDetails>Esimerkki Konepaja Oy</EpiNameAddressDetails><EpiBei>12345671</EpiBei><EpiAccountID IdentificationSchemeName="IBAN">FI2112345600000785</EpiAccountID></EpiBeneficiaryPartyDetails>
+    </EpiPartyDetails>
+    <EpiPaymentInstructionDetails>
+      <EpiRemittanceInfoIdentifier IdentificationSchemeName="SPY">1004202611878</EpiRemittanceInfoIdentifier>
+      <EpiInstructedAmount AmountCurrencyIdentifier="EUR">126600,07</EpiInstructedAmount>
+      <EpiCharge ChargeOption="SHA">SHA</EpiCharge>
+      <EpiDateOptionDate Format="CCYYMMDD">20261207</EpiDateOptionDate>
+    </EpiPaymentInstructionDetails>
+  </EpiDetails>
+</Finvoice>

@@ -1,0 +1,6 @@
+bin/
+obj/
+samples/output/
+*.user
+.vs/
+.idea/

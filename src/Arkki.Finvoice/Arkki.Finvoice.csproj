@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Finvoice 3.0 reader, Finnish bank barcode (pankkiviivakoodi), credit transfer form (tilisiirto) and invoice rendering on top of Arkki.Pdf.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Arkki.Pdf\Arkki.Pdf.csproj" />
+  </ItemGroup>
+</Project>

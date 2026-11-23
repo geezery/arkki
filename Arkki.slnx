@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Arkki.Pdf/Arkki.Pdf.csproj" />
+    <Project Path="src/Arkki.Finvoice/Arkki.Finvoice.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Arkki.Samples.Invoice/Arkki.Samples.Invoice.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Arkki.Tests/Arkki.Tests.csproj" />
+  </Folder>
+</Solution>
