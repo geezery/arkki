@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Arkki.Finvoice;
+using Arkki.Samples.Finvoice;
 using Arkki.Pdf;
 using Arkki.Pdf.Fonts;
 

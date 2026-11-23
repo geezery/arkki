@@ -10,7 +10,7 @@ internal static class LayoutTests
     public static void Run()
     {
         var layoutDoc = new PdfDocument();
-        var family = new FontFamily(layoutDoc.AddFont(Samples.Regular), layoutDoc.AddFont(Samples.Bold));
+        var family = new FontFamily(layoutDoc.AddFont(TestData.Regular), layoutDoc.AddFont(TestData.Bold));
         var style = new TextStyle(family, 10);
         var paragraph = new TextBlock(string.Join(" ", Enumerable.Repeat("word", 400)), style);
         LayoutResult partial = paragraph.Layout(200, 50);

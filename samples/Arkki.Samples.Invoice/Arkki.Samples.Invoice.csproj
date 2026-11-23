@@ -3,6 +3,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Arkki.Finvoice\Arkki.Finvoice.csproj" />
+    <ProjectReference Include="..\Arkki.Samples.Finvoice\Arkki.Samples.Finvoice.csproj" />
   </ItemGroup>
 </Project>

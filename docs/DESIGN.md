@@ -6,13 +6,15 @@
    be rendered in parallel.
 2. No engines underneath: no browser, no native libraries, no NuGet dependencies. Native AOT
    and trimming friendly.
-3. Exact output for regulated forms. The first target is the Finnish invoice with a credit
-   transfer form and bank barcode.
+3. Exact output for any document, including regulated forms. The library knows nothing about
+   invoices or any other document type; the Finnish invoice with its credit transfer form and
+   bank barcode is a sample that proves the precision.
+4. No dependencies outside the .NET base class library.
 
 ## Layers
 
 ```
-Arkki.Finvoice   FinvoiceReader -> FinvoiceInvoice -> FinvoiceRenderer, GiroSlip, BankBarcode
+(sample)         Arkki.Samples.Finvoice: reader -> model -> renderer, giro form, bank barcode
 Arkki.Pdf        Layout:   Element tree -> Fragments -> pages          (FlowDocument)
                  Canvas:   immediate-mode drawing, top-left origin     (PdfCanvas)
                  Objects:  fonts, images, barcodes                     (PdfFont, PdfImage, Code128)
@@ -49,16 +51,16 @@ src/Arkki.Pdf/
     Tables/      Table, TableColumn
     Pagination/  FlowDocument, Margins, PageContext
   Internal/      PDF object writer, byte buffer
-src/Arkki.Finvoice/                                                 (Arkki.Finvoice)
+samples/Arkki.Samples.Finvoice/   not part of the library          (Arkki.Samples.Finvoice)
   Payments/      Iban, PaymentReference, BankBarcode
   Formatting/    FiFormat, JSON text loader
   Messages/      Finvoice model and FinvoiceReader
   Giro/          credit transfer form, GiroTexts + giro-texts.json
   Invoices/      FinvoiceRenderer, InvoiceTheme, InvoiceTexts + invoice-texts-fi.json
-tests/Arkki.Tests/  one file per feature, same folders
+tests/Arkki.Tests/  one file per feature; sample tests under Samples/
 ```
 
-Printed texts are data, not code. The invoice labels and the form's pre-printed wording are
+Printed texts are data, not code. In the sample, the invoice labels and the form's pre-printed wording are
 embedded JSON files loaded into `InvoiceTexts` and `GiroTexts`; a language is one more JSON file
 passed to `InvoiceTexts.Load`, and single labels can be changed with a `with` expression. Unknown
 or missing keys fail at load time.
@@ -78,7 +80,7 @@ overlays) for fixed forms such as the giro. The deciding reason is the ERP use c
 specific invoice templates must be storable as data, which a lambda DSL cannot express. A
 lambda-style builder can be added later as a thin layer that produces the same tree.
 
-## Credit transfer form: specification and measured result
+## Sample: credit transfer form, specification and measured result
 
 Sources: Finance Finland, *Tilisiirto-opas* section 2.16 (form model and dimensions) and
 *Pankkiviivakoodi-opas / Bank Bar Code Guide* 5.3.
@@ -108,12 +110,18 @@ Open points, to be checked against a printed original:
 
 ## Roadmap
 
-1. PDF/A-3b (XMP, output intent) with the Finvoice XML attached; veraPDF in CI.
-2. QR code on the form (the guide's optional payment QR), EPC QR.
-3. Kerning (GPOS/kern) and CFF-based OpenType fonts.
-4. Rich text: mixed styles in one paragraph, hyphenation.
-5. Table rows that split across pages; column spans.
-6. Templates as data (JSON) and a lambda-style builder on top of the element tree.
-7. Tagged PDF / PDF/UA.
-8. Swedish, English and Estonian invoice texts.
+Library:
+
+1. Reading existing PDFs and importing their pages, to merge documents.
+2. Rich text: mixed styles in one paragraph, tab stops, hyphenation.
+3. Table cells spanning columns; table rows that split across pages.
+4. PDF/A-3b (XMP, output intent) and embedded file attachments; veraPDF in CI.
+5. Barcodes: QR code (ISO/IEC 18004) and EAN-13 next to Code 128, plus an extension point for
+   other symbologies. Others (Data Matrix, PDF417 and so on) are left to users.
+6. Kerning (GPOS/kern) and CFF-based OpenType fonts.
+7. Templates as data (JSON) and a lambda-style builder on top of the element tree.
+8. Tagged PDF / PDF/UA.
 9. Subset cache keyed by glyph set, to cut the remaining compression cost.
+
+Finvoice sample: payment QR on the form, Finvoice XML attached to a PDF/A-3 invoice, Swedish
+and English texts.

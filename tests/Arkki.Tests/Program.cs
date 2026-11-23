@@ -1,13 +1,17 @@
 using Arkki.Tests;
 
+// Library
+Code128Tests.Run();
+TrueTypeFontTests.Run();
+LayoutTests.Run();
+PdfDocumentTests.Run();
+
+// The Finvoice sample
 BankBarcodeTests.Run();
 PaymentFormatTests.Run();
-Code128Tests.Run();
 FinvoiceReaderTests.Run();
-TrueTypeFontTests.Run();
 InvoiceTextsTests.Run();
 InvoiceRenderTests.Run();
-LayoutTests.Run();
 
 Console.WriteLine($"{Assert.Passed} passed, {Assert.Failed} failed");
 return Assert.Failed == 0 ? 0 : 1;

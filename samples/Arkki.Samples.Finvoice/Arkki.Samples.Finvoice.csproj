@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Sample built on Arkki.Pdf: a Finvoice 3.0 invoice with the Finnish bank barcode and credit transfer form. Not part of the library; copy it into your application and adapt it.</Description>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Arkki.Pdf\Arkki.Pdf.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="**\*.json" Exclude="bin\**;obj\**" LogicalName="Arkki.Samples.Finvoice.%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

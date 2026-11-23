@@ -3,48 +3,23 @@
 Fast, dependency-free PDF generation for .NET, written in C#. No browser engine, no native
 binaries, no NuGet dependencies. Licensed under the Mozilla Public License 2.0.
 
-> Working name. Status: early (0.1). The first milestone is done: a multi-page invoice rendered
-> from a Finvoice 3.0 file, with a company logo, the Finnish bank barcode and the credit
-> transfer form (tilisiirtolomake). See [`docs/sample-invoice.pdf`](docs/sample-invoice.pdf).
+> Working name. Status: early (0.1). The library is `Arkki.Pdf`: a general-purpose PDF writer
+> and layout engine with no knowledge of any particular document type. The first milestone,
+> proving that it can reproduce a regulated form exactly, is a sample: a multi-page Finvoice
+> invoice with a logo, the Finnish bank barcode and the credit transfer form. See
+> [`docs/sample-invoice.pdf`](docs/sample-invoice.pdf).
 
 ## What is in the box
 
 | Project | Contents |
 |---|---|
-| `Arkki.Pdf` | PDF writer, TrueType embedding with subsetting, PNG/JPEG images, vector Code 128, an immediate-mode canvas and a paginating layout engine |
-| `Arkki.Finvoice` | Finvoice 3.0 reader, IBAN and reference number validation, bank barcode data (versions 4 and 5), the credit transfer form and an invoice renderer |
+| `src/Arkki.Pdf` | The library. PDF writer, TrueType embedding with subsetting, PNG/JPEG images, vector Code 128, an immediate-mode canvas and a paginating layout engine |
+| `samples/Arkki.Samples.Finvoice` | Sample, not shipped. Finvoice 3.0 reader, IBAN and reference validation, bank barcode, credit transfer form and an invoice renderer. Copy it into your application and adapt it |
+| `samples/Arkki.Samples.Invoice` | Console program that renders the sample invoice and times it |
 
 ## Quick start
 
-```csharp
-using Arkki.Finvoice;
-using Arkki.Pdf;
-using Arkki.Pdf.Fonts;
-
-// Parse fonts and the logo once; they are immutable and shared by all renders and threads.
-var theme = new InvoiceTheme
-{
-    RegularFont = TrueTypeFont.Load(File.ReadAllBytes("LiberationSans-Regular.ttf")),
-    BoldFont = TrueTypeFont.Load(File.ReadAllBytes("LiberationSans-Bold.ttf")),
-    Logo = PdfImage.Load(File.ReadAllBytes("logo.png")),
-};
-
-FinvoiceInvoice invoice = FinvoiceReader.Load("invoice.xml");
-File.WriteAllBytes("invoice.pdf", FinvoiceRenderer.RenderToArray(invoice, theme));
-```
-
-The labels are Finnish by default. They are loaded from JSON, so another language is one file:
-
-```csharp
-// Same keys as src/Arkki.Finvoice/Invoices/invoice-texts-fi.json.
-var theme = new InvoiceTheme
-{
-    RegularFont = regular, BoldFont = bold,
-    Texts = InvoiceTexts.Load(File.OpenRead("invoice-texts-en.json")),
-};
-```
-
-Building your own documents uses the same layout elements the invoice is made of:
+A document is a tree of layout elements rendered onto pages:
 
 ```csharp
 var doc = new PdfDocument();
@@ -63,6 +38,29 @@ new FlowDocument
 
 doc.Save(stream);
 ```
+
+## The invoice sample
+
+```csharp
+using Arkki.Pdf;
+using Arkki.Pdf.Fonts;
+using Arkki.Samples.Finvoice;
+
+// Parse fonts and the logo once; they are immutable and shared by all renders and threads.
+var theme = new InvoiceTheme
+{
+    RegularFont = TrueTypeFont.Load(File.ReadAllBytes("LiberationSans-Regular.ttf")),
+    BoldFont = TrueTypeFont.Load(File.ReadAllBytes("LiberationSans-Bold.ttf")),
+    Logo = PdfImage.Load(File.ReadAllBytes("logo.png")),
+};
+
+FinvoiceInvoice invoice = FinvoiceReader.Load("invoice.xml");
+File.WriteAllBytes("invoice.pdf", FinvoiceRenderer.RenderToArray(invoice, theme));
+```
+
+Its labels are Finnish by default and are loaded from JSON
+(`samples/Arkki.Samples.Finvoice/Invoices/invoice-texts-fi.json`), so another language is one
+file passed to `InvoiceTexts.Load` and set as `InvoiceTheme.Texts`.
 
 ## Build, test, run
 
