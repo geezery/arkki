@@ -59,11 +59,16 @@ public sealed class PdfFont
     internal void Write(PdfWriter w, int fontId)
     {
         int cidId = w.Reserve(), descId = w.Reserve(), fileId = w.Reserve(), toUnicodeId = w.Reserve();
-        string name = SubsetTag() + "+" + Face.PostScriptName;
+        // A CFF-outline OpenType font is embedded whole (FontFile3 /OpenType); TrueType outlines are subset.
+        string name = Face.IsCff ? Face.PostScriptName : SubsetTag() + "+" + Face.PostScriptName;
         double k = 1000.0 / Face.UnitsPerEm;
 
-        byte[] program = Face.BuildSubset(_used.Keys);
-        w.WriteStream(fileId, "/Length1 " + program.Length, program, compress: true);
+        if (Face.IsCff) w.WriteStream(fileId, "/Subtype /OpenType", Face.FileData, compress: true);
+        else
+        {
+            byte[] program = Face.BuildSubset(_used.Keys);
+            w.WriteStream(fileId, "/Length1 " + program.Length, program, compress: true);
+        }
 
         var b = new ByteBuf(512);
         int flags = 4 | (Face.IsFixedPitch ? 1 : 0) | (Face.ItalicAngle != 0 ? 64 : 0);
@@ -72,13 +77,13 @@ public sealed class PdfFont
             .Ascii("] /ItalicAngle ").Num(Face.ItalicAngle)
             .Ascii(" /Ascent ").Num(Face.Ascender * k).Ascii(" /Descent ").Num(Face.Descender * k)
             .Ascii(" /CapHeight ").Num(Face.CapHeight * k).Ascii(" /StemV ").Int(Face.WeightClass >= 600 ? 140 : 80)
-            .Ascii(" /FontFile2 ").Int(fileId).Ascii(" 0 R >>");
+            .Ascii(Face.IsCff ? " /FontFile3 " : " /FontFile2 ").Int(fileId).Ascii(" 0 R >>");
         w.WriteObject(descId, b);
 
         b.Reset();
-        b.Ascii("<< /Type /Font /Subtype /CIDFontType2 /BaseFont /").Ascii(name)
+        b.Ascii(Face.IsCff ? "<< /Type /Font /Subtype /CIDFontType0 /BaseFont /" : "<< /Type /Font /Subtype /CIDFontType2 /BaseFont /").Ascii(name)
             .Ascii(" /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor ")
-            .Int(descId).Ascii(" 0 R /CIDToGIDMap /Identity /DW 1000 /W [");
+            .Int(descId).Ascii(Face.IsCff ? " 0 R /DW 1000 /W [" : " 0 R /CIDToGIDMap /Identity /DW 1000 /W [");
         int previous = -2;
         foreach (int g in _used.Keys)
         {

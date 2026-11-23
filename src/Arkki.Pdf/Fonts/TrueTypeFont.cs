@@ -4,8 +4,9 @@ using System.Text;
 namespace Arkki.Pdf.Fonts;
 
 /// <summary>
-/// Minimal, read-only TrueType parser (glyf outlines only). Parses just what PDF embedding needs:
-/// metrics, the Unicode character map and glyph locations for subsetting. Instances are immutable
+/// Minimal, read-only TrueType and OpenType parser. Parses just what PDF embedding needs: metrics, the Unicode
+/// character map and, for TrueType (glyf) outlines, glyph locations for subsetting. OpenType fonts with CFF
+/// outlines are embedded whole, since Arkki does not subset CFF. Instances are immutable
 /// and safe to share between threads and documents.
 /// </summary>
 public sealed class TrueTypeFont
@@ -34,18 +35,23 @@ public sealed class TrueTypeFont
     private TrueTypeFont(byte[] data)
     {
         _d = data;
+        if (data.Length < 12) throw new InvalidDataException("Not a TrueType or OpenType font file: too short.");
         uint version = U32(0);
-        if (version == 0x4F54544F) // 'OTTO'
-            throw new NotSupportedException("CFF-based OpenType fonts are not supported yet; use a font with TrueType (glyf) outlines.");
-        if (version != 0x00010000 && version != 0x74727565)
-            throw new InvalidDataException("Not a TrueType font file.");
+        IsCff = version == 0x4F54544F; // 'OTTO'
+        if (version == 0x74746366) // 'ttcf'
+            throw new NotSupportedException("Font collections (.ttc) are not supported; extract one font from the collection.");
+        if (!IsCff && version != 0x00010000 && version != 0x74727565)
+            throw new InvalidDataException("Not a TrueType or OpenType font file.");
 
         int numTables = U16(4);
         for (int i = 0; i < numTables; i++)
         {
             int rec = 12 + i * 16;
+            if (rec + 16 > _d.Length) throw new InvalidDataException("Font table directory is truncated.");
             string tag = Encoding.ASCII.GetString(_d, rec, 4);
-            _tables[tag] = ((int)U32(rec + 8), (int)U32(rec + 12));
+            int offset = (int)U32(rec + 8), length = (int)U32(rec + 12);
+            if (offset < 0 || length < 0 || (long)offset + length > _d.Length) throw new InvalidDataException($"Font table '{tag}' lies outside the file.");
+            _tables[tag] = (offset, length);
         }
 
         int head = Table("head");
@@ -82,16 +88,37 @@ public sealed class TrueTypeFont
             IsFixedPitch = U32(post.Offset + 12) != 0;
         }
 
-        int loca = Table("loca");
-        _loca = new uint[GlyphCount + 1];
-        for (int g = 0; g <= GlyphCount; g++)
-            _loca[g] = locaFormat == 0 ? (uint)U16(loca + g * 2) * 2 : U32(loca + g * 4);
+        if (IsCff)
+        {
+            Table("CFF ");
+            _loca = [];
+        }
+        else
+        {
+            int loca = Table("loca");
+            _loca = new uint[GlyphCount + 1];
+            for (int g = 0; g <= GlyphCount; g++)
+                _loca[g] = locaFormat == 0 ? (uint)U16(loca + g * 2) * 2 : U32(loca + g * 4);
+        }
 
         ParseCmap(Table("cmap"));
         PostScriptName = ReadPostScriptName() ?? "ArkkiFont";
     }
 
-    public static TrueTypeFont Load(byte[] data) => new(data);
+    /// <summary>True for an OpenType font with CFF outlines ('OTTO'); it is embedded whole, not subset.</summary>
+    public bool IsCff { get; }
+
+    /// <summary>Reads a .ttf or .otf file. Throws <see cref="InvalidDataException"/> for a file that is not a usable font.</summary>
+    public static TrueTypeFont Load(byte[] data)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        try { return new(data); }
+        catch (ArgumentOutOfRangeException e) { throw new InvalidDataException("The font file is truncated or damaged.", e); }
+        catch (IndexOutOfRangeException e) { throw new InvalidDataException("The font file is truncated or damaged.", e); }
+    }
+
+    /// <summary>The whole font file, for embedding a font that is not subset.</summary>
+    internal ReadOnlySpan<byte> FileData => _d;
 
     /// <summary>Glyph index for a Unicode code point, or 0 (.notdef) when the font has no glyph for it.</summary>
     public int GlyphIndex(int codePoint) => _cmap.TryGetValue(codePoint, out ushort g) ? g : 0;

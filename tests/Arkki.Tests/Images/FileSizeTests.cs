@@ -34,6 +34,22 @@ internal static class FileSizeTests
         byte[] alphaPng = PngWriter.Write(50, 50, (x, y) => (200, 0, 0, (byte)(x * 5)), alpha: true);
         Check("alpha channel becomes a soft mask", ImageDictionary(PdfImage.Load(alphaPng)).Contains("/SMask"));
 
+        // The soft mask blends: half-transparent red over a blue square renders purple, a transparent pixel shows the blue.
+        byte[] halfPng = PngWriter.Write(20, 20, (x, y) => x < 10 ? ((byte)255, (byte)0, (byte)0, (byte)128) : ((byte)255, (byte)0, (byte)0, (byte)0), alpha: true);
+        var blendDoc = new PdfDocument();
+        var blendPage = blendDoc.AddPage(100, 100);
+        blendPage.Canvas.SetFillColor(new Color(0, 0, 1));
+        blendPage.Canvas.FillRect(0, 0, 100, 100);
+        blendPage.Canvas.Image(PdfImage.Load(halfPng), 0, 0, 100, 100);
+        var px = External.Render(blendDoc.ToArray());
+        if (px is not null)
+        {
+            (byte R, byte G, byte B) At(int x, int y) { int i = (y * px.Value.Width + x) * 3; return (px.Value.Rgb[i], px.Value.Rgb[i + 1], px.Value.Rgb[i + 2]); }
+            var half = At(25, 50); var clear = At(75, 50);
+            Check("half-transparent PNG blends with what is under it", half.R is > 100 and < 160 && half.B is > 100 and < 160, half.ToString());
+            Check("fully transparent PNG pixels show what is under them", clear.R < 20 && clear.B > 235, clear.ToString());
+        }
+
         // Downscaling on load keeps the aspect ratio and shrinks the data.
         PdfImage big = PdfImage.Load(gradientPng);
         PdfImage small = PdfImage.Load(gradientPng, 100, 100);

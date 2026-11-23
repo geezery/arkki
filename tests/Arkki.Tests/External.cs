@@ -59,4 +59,30 @@ internal static class External
         var r = Run("python3", pdf, "-c", "import sys, pypdf\n" + script, "{file}");
         return r?.Output;
     }
+
+    /// <summary>Renders the first page with pdftoppm to RGB pixels; null when poppler is not installed.</summary>
+    public static (int Width, int Height, byte[] Rgb)? Render(byte[] pdf, int dpi = 72)
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"arkki-{Guid.NewGuid():N}");
+        var r = Run("pdftoppm", pdf, "-r", dpi.ToString(System.Globalization.CultureInfo.InvariantCulture), "-f", "1", "-l", "1", "-singlefile", "{file}", root);
+        if (r is null) return null;
+        string ppm = root + ".ppm";
+        if (!File.Exists(ppm)) { Assert.Check("pdftoppm renders the page", false, r.Value.Output); return null; }
+        byte[] d = File.ReadAllBytes(ppm);
+        File.Delete(ppm);
+        // P6 header: magic, width, height, maxval, each followed by whitespace.
+        int pos = 0;
+        string Token()
+        {
+            while (char.IsWhiteSpace((char)d[pos])) pos++;
+            int start = pos;
+            while (!char.IsWhiteSpace((char)d[pos])) pos++;
+            return System.Text.Encoding.ASCII.GetString(d, start, pos - start);
+        }
+        Token();
+        int w = int.Parse(Token()), h = int.Parse(Token());
+        Token();
+        pos++;
+        return (w, h, d[pos..]);
+    }
 }
