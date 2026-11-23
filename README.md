@@ -39,6 +39,18 @@ new FlowDocument
 doc.Save(stream);
 ```
 
+Paragraphs can mix styles, and a row with a left and a right aligned block does what a right
+tab stop does in a word processor:
+
+```csharp
+var due = new TextBlock([new("Due ", body), new("7.12.2026", body with { Bold = true })]);
+var line = new Row().Add(Len.Star(), new TextBlock("Invoice 1187", body))
+                    .Add(Len.Star(), new TextBlock("Page 1 (3)", body, HAlign.Right));
+```
+
+Italic needs its own font file: `new FontFamily(regular, bold, Italic: italic, BoldItalic: boldItalic)`.
+Without one, italic text falls back to the upright face.
+
 ## Merging PDF files
 
 ```csharp
@@ -53,6 +65,7 @@ doc.ImportPages(PdfReader.Open(File.ReadAllBytes("agreement.pdf")));
 doc.ImportPage(PdfReader.Open(File.ReadAllBytes("appendix.pdf")), 0);
 ```
 
+`PdfReader.ExtractText(page)` returns a page's text, for tests that assert on what a reader sees.
 The reader handles cross-reference tables and streams, object streams, incremental updates and
 damaged cross-references. Encrypted files are rejected.
 

@@ -4,9 +4,11 @@ using Arkki.Tests;
 Code128Tests.Run();
 TrueTypeFontTests.Run();
 LayoutTests.Run();
+RichTextTests.Run();
 PdfDocumentTests.Run();
 PdfReaderTests.Run();
 MergeTests.Run();
+TextExtractionTests.Run();
 FileSizeTests.Run();
 
 // The Finvoice sample

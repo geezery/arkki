@@ -34,6 +34,20 @@ public sealed class PdfReader
         return (Math.Abs(box[2] - box[0]), Math.Abs(box[3] - box[1]));
     }
 
+    /// <summary>
+    /// The text of a page (zero-based), in drawing order, with a line break where the baseline
+    /// moves. Meant for tests and search, not for layout reconstruction.
+    /// </summary>
+    public string ExtractText(int pageIndex)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(pageIndex);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(pageIndex, PageCount);
+        return new TextExtractor(this).Extract(_pages[pageIndex]);
+    }
+
+    /// <summary>The text of every page, pages separated by a blank line.</summary>
+    public string ExtractText() => string.Join("\n\n", Enumerable.Range(0, PageCount).Select(ExtractText));
+
     public static PdfReader Open(byte[] data)
     {
         ArgumentNullException.ThrowIfNull(data);

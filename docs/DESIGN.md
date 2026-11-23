@@ -126,16 +126,14 @@ Open points, to be checked against a printed original:
 
 Library:
 
-1. Text extraction from read pages, for tests that assert on what a reader sees.
-2. Rich text: mixed styles in one paragraph, tab stops, hyphenation.
-3. Table cells spanning columns; table rows that split across pages.
-4. PDF/A-3b (XMP, output intent) and embedded file attachments; veraPDF in CI.
-5. Barcodes: QR code (ISO/IEC 18004) and EAN-13 next to Code 128, plus an extension point for
+1. SVG: the subset that logos and simple drawings use, drawn as vectors.
+2. Table cells spanning columns, a forced page break, table rows that split across pages.
+3. Barcodes: QR code (ISO/IEC 18004) and EAN-13 next to Code 128, plus an extension point for
    other symbologies. Others (Data Matrix, PDF417 and so on) are left to users.
-6. Kerning (GPOS/kern) and CFF-based OpenType fonts.
-7. Templates as data (JSON) and a lambda-style builder on top of the element tree.
-8. Tagged PDF / PDF/UA.
-9. Subset cache keyed by glyph set, to cut the remaining compression cost.
+4. PDF/A-3b (XMP, output intent) and embedded file attachments; veraPDF in CI.
+5. Kerning (GPOS/kern), hyphenation and CFF-based OpenType fonts.
+6. Templates as data (JSON) and a lambda-style builder on top of the element tree.
+7. Tagged PDF / PDF/UA.
 
 Finvoice sample: payment QR on the form, Finvoice XML attached to a PDF/A-3 invoice, Swedish
 and English texts.
