@@ -1,7 +1,7 @@
 # Arkki
 
 Fast, dependency-free PDF generation for .NET, written in C#. No browser engine, no native
-binaries, no NuGet dependencies. Licensed under GPL-3.0.
+binaries, no NuGet dependencies. Licensed under the Mozilla Public License 2.0.
 
 > Working name. Status: early (0.1). The first milestone is done: a multi-page invoice rendered
 > from a Finvoice 3.0 file, with a company logo, the Finnish bank barcode and the credit
@@ -77,5 +77,5 @@ with `Optimal`, single-threaded, at roughly 100 kB including the logo and two su
 
 ## License
 
-GPL-3.0-only, see [`LICENSE`](LICENSE). The Liberation Sans fonts under `samples/fonts` are
+MPL-2.0, see [`LICENSE`](LICENSE). The Liberation Sans fonts under `samples/fonts` are
 licensed separately under the SIL Open Font License 1.1.
