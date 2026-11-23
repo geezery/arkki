@@ -3,4 +3,8 @@
     <IsAotCompatible>true</IsAotCompatible>
     <Description>Fast, dependency-free PDF generation for .NET: writer, TrueType embedding, images, barcodes and a paginating layout engine.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Arkki.Tests" />
+    <InternalsVisibleTo Include="Arkki.Pdf.Signing" />
+  </ItemGroup>
 </Project>

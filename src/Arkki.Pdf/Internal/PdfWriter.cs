@@ -15,6 +15,9 @@ internal sealed class PdfWriter
 
     public CompressionLevel Compression { get; init; } = CompressionLevel.Optimal;
 
+    /// <summary>Encrypts every string and stream written after it is set; null writes them as they are.</summary>
+    public Security.Encryptor? Encryptor { get; set; }
+
     public PdfWriter(Stream output)
     {
         _out = output;
@@ -47,12 +50,26 @@ internal sealed class PdfWriter
     /// <summary>Writes a non-stream object whose body is already serialized.</summary>
     public void WriteObject(int id, ByteBuf body) => WriteObject(id, body.Span);
 
-    /// <summary>Writes an object whose body (a value, or a stream with its dictionary) is already serialized.</summary>
-    public void WriteObject(int id, ReadOnlySpan<byte> body)
+    /// <summary>Writes a non-stream object whose body is already serialized; with encryption on, its strings are encrypted.</summary>
+    public void WriteObject(int id, ReadOnlySpan<byte> body, bool encrypt = true)
     {
         Begin(id);
-        Raw(body);
+        Raw(encrypt && Encryptor is not null ? Encryptor.EncryptStrings(body, id) : body);
         Raw("\nendobj\n"u8);
+    }
+
+    /// <summary>Writes a stream from its dictionary (opening "&lt;&lt;" and entries, no /Length and no closing) and its stored data.</summary>
+    public void WriteRawStream(int id, ReadOnlySpan<byte> dictHead, ReadOnlySpan<byte> data)
+    {
+        byte[]? encrypted = Encryptor?.EncryptData(data);
+        ReadOnlySpan<byte> payload = encrypted ?? data;
+        Begin(id);
+        _head.Reset();
+        _head.Bytes(Encryptor is not null ? Encryptor.EncryptStrings(dictHead, id, open: true) : dictHead);
+        _head.Ascii(" /Length ").Int(payload.Length).Ascii(" >>\nstream\n");
+        Raw(_head.Span);
+        Raw(payload);
+        Raw("\nendstream\nendobj\n"u8);
     }
 
     /// <summary>
@@ -71,28 +88,21 @@ internal sealed class PdfWriter
             packedLength = (int)ms.Length;
         }
 
-        Begin(id);
-        _head.Reset();
-        _head.Ascii("<< ").Ascii(dictEntries).Ascii(" /Length ").Int(compress ? packedLength : data.Length);
-        if (compress) _head.Ascii(" /Filter /FlateDecode");
-        _head.Ascii(" >>\nstream\n");
-        Raw(_head.Span);
-        Raw(compress ? packed.AsSpan(0, packedLength) : data);
-        Raw("\nendstream\nendobj\n"u8);
+        var head = new ByteBuf(64);
+        head.Ascii("<< ").Ascii(dictEntries);
+        if (compress) head.Ascii(" /Filter /FlateDecode");
+        WriteRawStream(id, head.Span, compress ? packed.AsSpan(0, packedLength) : data);
     }
 
     /// <summary>Writes a stream whose data is already encoded; the dictionary must name the filter.</summary>
     public void WriteEncodedStream(int id, string dictEntries, ReadOnlySpan<byte> encoded)
     {
-        Begin(id);
-        _head.Reset();
-        _head.Ascii("<< ").Ascii(dictEntries).Ascii(" /Length ").Int(encoded.Length).Ascii(" >>\nstream\n");
-        Raw(_head.Span);
-        Raw(encoded);
-        Raw("\nendstream\nendobj\n"u8);
+        var head = new ByteBuf(64);
+        head.Ascii("<< ").Ascii(dictEntries);
+        WriteRawStream(id, head.Span, encoded);
     }
 
-    public void Finish(int rootId, int infoId, ReadOnlySpan<byte> documentId)
+    public void Finish(int rootId, int infoId, ReadOnlySpan<byte> documentId, int encryptId = 0)
     {
         long xref = _pos;
         var b = new ByteBuf(_offsets.Count * 20 + 128);
@@ -107,7 +117,9 @@ internal sealed class PdfWriter
             b.Ascii(" 00000 n \n");
         }
         b.Ascii("trailer\n<< /Size ").Int(_offsets.Count)
-            .Ascii(" /Root ").Int(rootId).Ascii(" 0 R /Info ").Int(infoId).Ascii(" 0 R /ID [<");
+            .Ascii(" /Root ").Int(rootId).Ascii(" 0 R /Info ").Int(infoId).Ascii(" 0 R");
+        if (encryptId > 0) b.Ascii(" /Encrypt ").Int(encryptId).Ascii(" 0 R");
+        b.Ascii(" /ID [<");
         foreach (byte x in documentId) b.Hex8(x);
         b.Ascii("> <");
         foreach (byte x in documentId) b.Hex8(x);

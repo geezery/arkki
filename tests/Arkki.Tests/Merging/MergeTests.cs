@@ -49,7 +49,7 @@ internal static class MergeTests
 
         var drawn = new PdfDocument();
         drawn.ImportPage(PdfReader.Open(one), 0).Canvas.Line(0, 0, 10, 10);
-        Throws<NotSupportedException>("drawing on an imported page is refused", () => drawn.ToArray());
+        Equal("drawing on an imported page is a stamp", 1, PdfReader.Open(drawn.ToArray()).PageCount);
     }
 
     private static int Count(byte[] haystack, string needle)

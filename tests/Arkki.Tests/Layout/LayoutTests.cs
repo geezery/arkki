@@ -108,7 +108,7 @@ internal static class RowStyleTests
         }.RenderTo(doc);
         Equal("page overlay runs on every page", 2, pages);
         string pdf = System.Text.Encoding.Latin1.GetString(doc.ToArray());
-        Check("opacity is a graphics state", pdf.Contains("/ExtGState << /Gs1 << /ca 0.25 /CA 0.25 >> >>") && pdf.Contains("/Gs1 gs"));
+        Check("opacity is a graphics state", pdf.Contains("/ExtGState << /AkG1 << /ca 0.25 /CA 0.25 >> >>") && pdf.Contains("/AkG1 gs"));
 
         // A filled cell paints its whole cell at the row's height, however short its own content is.
         var cardDoc = new PdfDocument { Compression = System.IO.Compression.CompressionLevel.NoCompression };

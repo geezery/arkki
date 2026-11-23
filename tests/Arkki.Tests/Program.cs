@@ -13,6 +13,9 @@ PdfReaderTests.Run();
 MergeTests.Run();
 TextExtractionTests.Run();
 FileSizeTests.Run();
+EditingTests.Run();
+FormTests.Run();
+EncryptionTests.Run();
 
 // The Finvoice sample
 BankBarcodeTests.Run();
@@ -21,5 +24,5 @@ FinvoiceReaderTests.Run();
 InvoiceTextsTests.Run();
 InvoiceRenderTests.Run();
 
-Console.WriteLine($"{Assert.Passed} passed, {Assert.Failed} failed");
+Console.WriteLine($"{Assert.Passed} passed, {Assert.Failed} failed, {External.Skipped} external checks skipped");
 return Assert.Failed == 0 ? 0 : 1;

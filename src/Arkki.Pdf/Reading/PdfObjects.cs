@@ -81,3 +81,9 @@ internal static class PdfValueExtensions
         _ => v.GetType().Name,
     };
 }
+
+/// <summary>A reference to an object of the document being written (not of a read file): written as "n 0 R" as is.</summary>
+internal sealed class PdfOutputRef(int id) : PdfValue
+{
+    public int Id { get; } = id;
+}

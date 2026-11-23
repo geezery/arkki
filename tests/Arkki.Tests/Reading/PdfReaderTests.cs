@@ -1,3 +1,4 @@
+using Arkki.Pdf;
 using Arkki.Pdf.Reading;
 using static Arkki.Tests.Assert;
 
@@ -19,7 +20,7 @@ internal static class PdfReaderTests
         PdfReader lo = PdfReader.Open(TestData.Pdf("libreoffice"));
         Equal("read libreoffice: page count", 1, lo.PageCount);
 
-        Throws<NotSupportedException>("encrypted file is rejected", () => PdfReader.Open(TestData.Pdf("encrypted")));
+        Throws<PdfPasswordException>("encrypted file needs its password", () => PdfReader.Open(TestData.Pdf("encrypted")));
         Throws<InvalidDataException>("non-PDF data is rejected", () => PdfReader.Open("hello, world"u8.ToArray()));
         Throws<InvalidDataException>("truncated PDF without catalog is rejected", () => PdfReader.Open("%PDF-1.7\n1 0 obj\n<< >>\nendobj\n"u8.ToArray()));
     }

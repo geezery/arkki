@@ -18,13 +18,25 @@ public sealed class PdfCanvas
 
     private readonly PdfDocument _document;
 
-    internal PdfCanvas(PdfDocument document, double pageHeight)
+    internal PdfCanvas(PdfDocument document, PdfPage page, double originX, double originY, double pageHeight)
     {
         _document = document;
+        _page = page;
         // Flip the coordinate system once: top-left origin, y down.
-        _b.Ascii("1 0 0 -1 0 ").Num(pageHeight).Ascii(" cm\n");
+        _b.Ascii("1 0 0 -1 ").Num(originX).Sp().Num(originY + pageHeight).Ascii(" cm\n");
         _initialLength = _b.Length;
     }
+
+    private readonly PdfPage _page;
+
+    /// <summary>Makes the rectangle a link to a web address; see <see cref="PdfPage.AddLink(double, double, double, double, Uri)"/>.</summary>
+    public void Link(double x, double y, double width, double height, Uri target) => _page.AddLink(x, y, width, height, target);
+
+    /// <summary>Makes the rectangle a link to a place in the document.</summary>
+    public void Link(double x, double y, double width, double height, PdfPage target, double top = 0) => _page.AddLink(x, y, width, height, target, top);
+
+    /// <summary>The page this canvas draws on.</summary>
+    public PdfPage Page => _page;
 
     private readonly int _initialLength;
 
