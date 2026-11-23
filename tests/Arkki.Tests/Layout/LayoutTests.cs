@@ -64,3 +64,50 @@ internal static class SpanAndBreakTests
         Equal("text after the break is on page 2", "two", reader.ExtractText(1).Trim());
     }
 }
+
+/// <summary>Row styles, keep-with-next, page overlays and opacity.</summary>
+internal static class RowStyleTests
+{
+    public static void Run()
+    {
+        var doc = new PdfDocument { Compression = System.IO.Compression.CompressionLevel.NoCompression };
+        var style = new TextStyle(new FontFamily(doc.AddFont(TestData.Regular), doc.AddFont(TestData.Bold)), 10);
+        TableColumn[] columns = [new(Len.Star()), new(Len.Pt(60), HAlign.Right)];
+        var table = new Table(columns) { CellPaddingY = 2 };
+        table.SetHeader(new RowStyle(Background: Color.Gray(0.9), PaddingTop: 4, PaddingBottom: 4), new TextBlock("A", style), new TextBlock("B", style));
+        table.AddRow(new RowStyle(RuleAbove: Color.Black, PaddingTop: 1, PaddingBottom: 1), new TextBlock("x", style), new TextBlock("1", style));
+        table.AddRow(new TextBlock("y", style), new TextBlock("2", style));
+        table.AddRow(new RowStyle(MinHeight: 40), new TextBlock("z", style), new TextBlock("3", style));
+        double h = table.Layout(300, 500).Fragment!.Height;
+        Equal("row styles set padding and height", (style.LineAdvance + 8) + (style.LineAdvance + 2) + (style.LineAdvance + 4) + 40, h);
+
+        // Rows kept with the next ones move to the next page as a group.
+        var kept = new Table(columns) { CellPaddingY = 0 };
+        for (int i = 0; i < 4; i++) kept.AddRow(i == 2 ? new RowStyle(KeepWithNext: 1, PaddingTop: 0, PaddingBottom: 0) : null, new TextBlock("r" + i, style), new TextBlock("", style));
+        LayoutResult split = kept.Layout(300, style.LineAdvance * 3.5);
+        Equal("keep-with-next pulls the row to the next page", 2 * style.LineAdvance, split.Fragment!.Height);
+
+        // A heading that would end a page moves with the paragraph after it.
+        var flow = new Column(new Spacer(80), new TextBlock("Heading", style).KeepWithNext(), new TextBlock(string.Join(" ", Enumerable.Repeat("word", 30)), style).KeepTogether());
+        LayoutResult r = flow.Layout(200, 80 + style.LineAdvance * 2);
+        Equal("keep-with-next moves the heading", 80.0, r.Fragment!.Height);
+
+        int pages = 0;
+        new FlowDocument
+        {
+            Content = new Column(new TextBlock("one", style), new PageBreak(), new TextBlock("two", style)),
+            PageOverlay = (canvas, page) =>
+            {
+                pages++;
+                canvas.Save();
+                canvas.SetOpacity(0.25);
+                canvas.SetFillColor(new Color(0.9, 0.1, 0.1));
+                canvas.FillRect(10, 10, 100, 100);
+                canvas.Restore();
+            },
+        }.RenderTo(doc);
+        Equal("page overlay runs on every page", 2, pages);
+        string pdf = System.Text.Encoding.Latin1.GetString(doc.ToArray());
+        Check("opacity is a graphics state", pdf.Contains("/ExtGState << /Gs1 << /ca 0.25 /CA 0.25 >> >>") && pdf.Contains("/Gs1 gs"));
+    }
+}

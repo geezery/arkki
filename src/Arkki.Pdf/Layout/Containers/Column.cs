@@ -26,6 +26,20 @@ public sealed class Column : Element
             }
             if (r.Status == LayoutStatus.Full) continue;
 
+            // Nothing of this child fitted: children that keep with it move to the next page too.
+            int moved = 0;
+            if (r.Fragment is null || r.Status == LayoutStatus.None)
+            {
+                while (i - moved - 1 >= 0 && Children[i - moved - 1] is KeepWithNext && placed.Count > moved) moved++;
+                if (moved > 0)
+                {
+                    placed.RemoveRange(placed.Count - moved, moved);
+                    y = placed.Count > 0 ? placed[^1].Y + placed[^1].Fragment.Height : 0;
+                    i -= moved;
+                    r = LayoutResult.None(Children[i]);
+                }
+            }
+
             if (placed.Count == 0) return LayoutResult.None(this);
             var rest = new List<Element>(Children.Count - i);
             if (r.Remainder is not null) rest.Add(r.Remainder);

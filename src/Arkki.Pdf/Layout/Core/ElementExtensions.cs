@@ -14,6 +14,9 @@ public static class ElementExtensions
 
     public static KeepTogether KeepTogether(this Element e) => new(e);
 
+    /// <summary>Keeps the element on the same page as the start of the next element in a column.</summary>
+    public static KeepWithNext KeepWithNext(this Element e) => new(e);
+
     /// <summary>Makes a table cell cover <paramref name="columns"/> adjacent columns.</summary>
     public static ColumnSpan SpanColumns(this Element e, int columns) => new(e, columns);
 }

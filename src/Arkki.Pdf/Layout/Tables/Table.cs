@@ -3,11 +3,12 @@ namespace Arkki.Pdf.Layout;
 /// <summary>
 /// A table that breaks between rows and repeats its header on every page it continues on.
 /// Cells are ordinary elements, so a cell can hold wrapped text, an image or a nested layout.
-/// A cell made with <see cref="ElementExtensions.SpanColumns"/> covers several columns.
+/// A cell made with <see cref="ElementExtensions.SpanColumns"/> covers several columns, and a
+/// <see cref="RowStyle"/> gives one row its own background, rules and padding.
 /// </summary>
 public sealed class Table : Element
 {
-    private readonly List<Element[]> _rows;
+    private readonly List<(Element[] Cells, RowStyle? Style)> _rows;
     private readonly int _start;
 
     public Table(IReadOnlyList<TableColumn> columns)
@@ -18,7 +19,7 @@ public sealed class Table : Element
 
     private Table(Table source, int start)
     {
-        Columns = source.Columns; Header = source.Header; _rows = source._rows; _start = start;
+        Columns = source.Columns; Header = source.Header; HeaderStyle = source.HeaderStyle; _rows = source._rows; _start = start;
         CellPaddingX = source.CellPaddingX; CellPaddingY = source.CellPaddingY;
         HeaderBackground = source.HeaderBackground; HeaderRule = source.HeaderRule;
         RowRule = source.RowRule; RuleWidth = source.RuleWidth;
@@ -26,19 +27,27 @@ public sealed class Table : Element
 
     public IReadOnlyList<TableColumn> Columns { get; }
     public Element[]? Header { get; set; }
+
+    /// <summary>The header row's style. When unset, <see cref="HeaderBackground"/> and <see cref="HeaderRule"/> apply.</summary>
+    public RowStyle? HeaderStyle { get; set; }
     public double CellPaddingX { get; set; } = 3;
     public double CellPaddingY { get; set; } = 2.5;
     public Color? HeaderBackground { get; set; }
     public Color? HeaderRule { get; set; }
+
+    /// <summary>A rule under every row that has no <see cref="RowStyle"/> of its own.</summary>
     public Color? RowRule { get; set; }
     public double RuleWidth { get; set; } = 0.4;
     public int RowCount => _rows.Count;
 
     /// <summary>Adds a row. Its cells must cover every column exactly once, counting spans.</summary>
-    public Table AddRow(params Element[] cells)
+    public Table AddRow(params Element[] cells) => AddRow(null, cells);
+
+    /// <summary>Adds a row with its own style.</summary>
+    public Table AddRow(RowStyle? style, params Element[] cells)
     {
         CheckCovers(cells);
-        _rows.Add(cells);
+        _rows.Add((cells, style));
         return this;
     }
 
@@ -66,12 +75,24 @@ public sealed class Table : Element
         return this;
     }
 
+    public Table SetHeader(RowStyle style, params Element[] cells)
+    {
+        SetHeader(cells);
+        HeaderStyle = style;
+        return this;
+    }
+
     public Table SetHeader(TextStyle style, params string[] cells)
     {
         Header = new Element[cells.Length];
         for (int i = 0; i < cells.Length; i++) Header[i] = new TextBlock(cells[i], style, Columns[i].Align);
         return this;
     }
+
+    private RowStyle EffectiveHeaderStyle =>
+        HeaderStyle ?? new RowStyle(Background: HeaderBackground, RuleBelow: HeaderRule, RuleWidth: RuleWidth * 2);
+
+    private RowStyle EffectiveStyle(RowStyle? style) => style ?? new RowStyle(RuleBelow: RowRule, RuleWidth: RuleWidth);
 
     public override LayoutResult Layout(double width, double height)
     {
@@ -81,19 +102,34 @@ public sealed class Table : Element
 
         if (Header is not null)
         {
-            RowLayout? header = LayoutRow(Header, widths, height, isHeader: true);
+            RowLayout? header = LayoutRow(Header, EffectiveHeaderStyle, widths, height);
             if (header is null) return LayoutResult.None(this);
             rows.Add(header.Value with { Y = 0 });
             y = header.Value.Height;
         }
+        int headerRows = rows.Count;
 
         int index = _start;
         for (; index < _rows.Count; index++)
         {
-            RowLayout? row = LayoutRow(_rows[index], widths, height - y, isHeader: false);
+            RowLayout? row = LayoutRow(_rows[index].Cells, EffectiveStyle(_rows[index].Style), widths, height - y);
             if (row is null) break;
             rows.Add(row.Value with { Y = y });
             y += row.Value.Height;
+        }
+
+        if (index < _rows.Count)
+        {
+            // Rows that keep with the next ones move to the next page together with them.
+            int keep = index;
+            for (int j = index - 1; j >= _start; j--)
+                if (j + (_rows[j].Style?.KeepWithNext ?? 0) >= keep) keep = j;
+            if (keep < index)
+            {
+                rows.RemoveRange(headerRows + (keep - _start), index - keep);
+                index = keep;
+                y = rows.Count > 0 ? rows[^1].Y + rows[^1].Height : 0;
+            }
         }
 
         if (index == _start && _start < _rows.Count) return LayoutResult.None(this);
@@ -103,8 +139,9 @@ public sealed class Table : Element
             : new LayoutResult(LayoutStatus.Partial, fragment, new Table(this, index));
     }
 
-    private RowLayout? LayoutRow(Element[] cells, double[] widths, double available, bool isHeader)
+    private RowLayout? LayoutRow(Element[] cells, RowStyle style, double[] widths, double available)
     {
+        double top = style.PaddingTop ?? CellPaddingY, bottom = style.PaddingBottom ?? CellPaddingY;
         var fragments = new Fragment[cells.Length];
         var offsets = new double[cells.Length];
         double rowHeight = 0, x = 0;
@@ -113,17 +150,18 @@ public sealed class Table : Element
         {
             double cellWidth = 0;
             for (int end = column + Span(cells[i]); column < end; column++) cellWidth += widths[column];
-            LayoutResult r = cells[i].Layout(cellWidth - 2 * CellPaddingX, available - 2 * CellPaddingY);
+            LayoutResult r = cells[i].Layout(cellWidth - 2 * CellPaddingX, available - top - bottom);
             if (r.Status != LayoutStatus.Full) return null;
             fragments[i] = r.Fragment!;
             offsets[i] = x;
             x += cellWidth;
             rowHeight = Math.Max(rowHeight, r.Fragment!.Height);
         }
-        return new RowLayout(fragments, offsets, rowHeight + 2 * CellPaddingY, 0, isHeader);
+        double height = Math.Max(rowHeight + top + bottom, style.MinHeight);
+        return height > available + 0.001 ? null : new RowLayout(fragments, offsets, style, top, height, 0);
     }
 
-    private readonly record struct RowLayout(Fragment[] Cells, double[] Offsets, double Height, double Y, bool IsHeader);
+    private readonly record struct RowLayout(Fragment[] Cells, double[] Offsets, RowStyle Style, double PaddingTop, double Height, double Y);
 
     private sealed class TableFragment : Fragment
     {
@@ -140,21 +178,39 @@ public sealed class Table : Element
             foreach (RowLayout row in _rows)
             {
                 double top = y + row.Y;
-                if (row.IsHeader && _t.HeaderBackground is { } bg)
+                RowStyle s = row.Style;
+                if (s.Background is { } bg)
                 {
                     canvas.SetFillColor(bg);
                     canvas.FillRect(x, top, Width, row.Height);
                 }
                 for (int i = 0; i < row.Cells.Length; i++)
-                    row.Cells[i].Draw(canvas, x + row.Offsets[i] + _t.CellPaddingX, top + _t.CellPaddingY);
-                Color? rule = row.IsHeader ? _t.HeaderRule : _t.RowRule;
-                if (rule is { } color)
-                {
-                    canvas.SetStrokeColor(color);
-                    canvas.SetLineWidth(row.IsHeader ? _t.RuleWidth * 2 : _t.RuleWidth);
-                    canvas.Line(x, top + row.Height, x + Width, top + row.Height);
-                }
+                    row.Cells[i].Draw(canvas, x + row.Offsets[i] + _t.CellPaddingX, top + row.PaddingTop);
+                if (s.RuleAbove is { } above) Rule(canvas, above, s.RuleWidth, x, top);
+                if (s.RuleBelow is { } below) Rule(canvas, below, s.RuleWidth, x, top + row.Height);
             }
+        }
+
+        private void Rule(PdfCanvas canvas, Color color, double width, double x, double y)
+        {
+            canvas.SetStrokeColor(color);
+            canvas.SetLineWidth(width);
+            canvas.Line(x, y, x + Width, y);
         }
     }
 }
+
+/// <summary>
+/// How one table row looks: a background, rules above and below it, its own vertical padding
+/// (the table's <see cref="Table.CellPaddingY"/> otherwise) and a minimum height.
+/// <paramref name="KeepWithNext"/> keeps the row on the same page as that many following rows.
+/// </summary>
+public sealed record RowStyle(
+    Color? Background = null,
+    Color? RuleAbove = null,
+    Color? RuleBelow = null,
+    double RuleWidth = 0.5,
+    double? PaddingTop = null,
+    double? PaddingBottom = null,
+    double MinHeight = 0,
+    int KeepWithNext = 0);

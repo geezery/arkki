@@ -6,6 +6,7 @@ BarcodeTests.Run();
 TrueTypeFontTests.Run();
 LayoutTests.Run();
 SpanAndBreakTests.Run();
+RowStyleTests.Run();
 RichTextTests.Run();
 PdfDocumentTests.Run();
 PdfReaderTests.Run();

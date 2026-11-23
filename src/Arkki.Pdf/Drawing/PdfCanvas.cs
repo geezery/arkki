@@ -147,6 +147,16 @@ public sealed class PdfCanvas
         _b.Ascii("f\n");
     }
 
+    /// <summary>
+    /// Sets the opacity (0 transparent to 1 opaque) of everything drawn after it, until
+    /// <see cref="Restore"/> or the next call. A watermark under <see cref="Save"/>/<see cref="Restore"/> is the typical use.
+    /// </summary>
+    public void SetOpacity(double opacity)
+    {
+        opacity = Math.Clamp(opacity, 0, 1);
+        _b.Ascii("/").Ascii(_document.OpacityName(opacity)).Ascii(" gs\n");
+    }
+
     public void Save()
     {
         _depth++;

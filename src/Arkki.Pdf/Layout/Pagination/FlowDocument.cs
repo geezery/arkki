@@ -28,6 +28,9 @@ public sealed class FlowDocument
     /// </summary>
     public double LastPageReserve { get; init; }
 
+    /// <summary>Draws directly on every page after its content, header and footer, e.g. a watermark.</summary>
+    public Action<PdfCanvas, PageContext>? PageOverlay { get; init; }
+
     /// <summary>Draws directly on the last page after its content, e.g. a pre-printed style form.</summary>
     public Action<PdfCanvas, PageContext>? LastPageOverlay { get; init; }
 
@@ -84,6 +87,7 @@ public sealed class FlowDocument
             }
 
             if (context.IsLast) LastPageOverlay?.Invoke(canvas, context);
+            PageOverlay?.Invoke(canvas, context);
         }
     }
 

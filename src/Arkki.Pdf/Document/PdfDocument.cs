@@ -52,6 +52,16 @@ public sealed class PdfDocument
         return "Im" + (index + 1);
     }
 
+    private readonly List<double> _opacities = [];
+
+    /// <summary>Resource name of a graphics state with the given fill and stroke opacity.</summary>
+    internal string OpacityName(double opacity)
+    {
+        int index = _opacities.IndexOf(opacity);
+        if (index < 0) { _opacities.Add(opacity); index = _opacities.Count - 1; }
+        return "Gs" + (index + 1);
+    }
+
     public PdfPage AddPage(double width, double height)
     {
         var page = new PdfPage(this, width, height);
@@ -147,7 +157,15 @@ public sealed class PdfDocument
             _images[i].Write(w, id);
             resources.Ascii(" /Im").Int(i + 1).Sp().Int(id).Ascii(" 0 R");
         }
-        resources.Ascii(" >> >>");
+        resources.Ascii(" >>");
+        if (_opacities.Count > 0)
+        {
+            resources.Ascii(" /ExtGState <<");
+            for (int i = 0; i < _opacities.Count; i++)
+                resources.Ascii(" /Gs").Int(i + 1).Ascii(" << /ca ").Num(_opacities[i]).Ascii(" /CA ").Num(_opacities[i]).Ascii(" >>");
+            resources.Ascii(" >>");
+        }
+        resources.Ascii(" >>");
         w.WriteObject(resourcesId, resources);
 
         for (int i = 0; i < _pages.Count; i++)
