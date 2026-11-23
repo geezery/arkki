@@ -14,7 +14,9 @@ var theme = new InvoiceTheme
 {
     RegularFont = TrueTypeFont.Load(File.ReadAllBytes(Path.Combine(root, "samples", "fonts", "LiberationSans-Regular.ttf"))),
     BoldFont = TrueTypeFont.Load(File.ReadAllBytes(Path.Combine(root, "samples", "fonts", "LiberationSans-Bold.ttf"))),
-    Logo = File.Exists(logoPath) ? PdfImage.Load(File.ReadAllBytes(logoPath)) : null,
+    // The logo prints at most 62 × 18 mm. 300 dpi is sharp on paper, and a logo stored at a
+    // higher resolution than that only makes every invoice bigger.
+    Logo = File.Exists(logoPath) ? PdfImage.Load(File.ReadAllBytes(logoPath), PixelsAt300Dpi(62), PixelsAt300Dpi(18)) : null,
 };
 
 FinvoiceInvoice invoice = FinvoiceReader.Load(xmlPath);
@@ -35,6 +37,8 @@ foreach (var level in new[] { System.IO.Compression.CompressionLevel.Optimal, Sy
     sw.Stop();
     Console.WriteLine($"{level,-8} {sw.Elapsed.TotalMilliseconds / runs:F2} ms per invoice, {bytes / 1024.0:F1} kB (single thread, {runs} runs)");
 }
+
+static int PixelsAt300Dpi(double mm) => (int)Math.Ceiling(mm / 25.4 * 300);
 
 static string FindRepositoryRoot()
 {

@@ -23,7 +23,13 @@ public sealed class PdfCanvas
         _document = document;
         // Flip the coordinate system once: top-left origin, y down.
         _b.Ascii("1 0 0 -1 0 ").Num(pageHeight).Ascii(" cm\n");
+        _initialLength = _b.Length;
     }
+
+    private readonly int _initialLength;
+
+    /// <summary>True until something is drawn.</summary>
+    internal bool IsEmpty => _b.Length == _initialLength;
 
     internal ReadOnlySpan<byte> Content => _b.Span;
 

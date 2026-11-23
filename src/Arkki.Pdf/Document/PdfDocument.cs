@@ -3,6 +3,8 @@ using System.Security.Cryptography;
 using System.Text;
 using Arkki.Pdf.Fonts;
 using Arkki.Pdf.Internal;
+using Arkki.Pdf.Merging;
+using Arkki.Pdf.Reading;
 
 namespace Arkki.Pdf;
 
@@ -59,6 +61,42 @@ public sealed class PdfDocument
 
     public PdfPage AddPage() => AddPage(PageSize.A4.Width, PageSize.A4.Height);
 
+    /// <summary>
+    /// Appends copies of all pages of <paramref name="source"/>. The pages keep their content,
+    /// resources and annotations exactly; nothing is re-rendered. The reader must stay alive until
+    /// the document is saved.
+    /// </summary>
+    public IReadOnlyList<PdfPage> ImportPages(PdfReader source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        var added = new List<PdfPage>(source.PageCount);
+        for (int i = 0; i < source.PageCount; i++) added.Add(ImportPage(source, i));
+        return added;
+    }
+
+    /// <summary>Appends a copy of one page of <paramref name="source"/> (zero-based <paramref name="index"/>).</summary>
+    public PdfPage ImportPage(PdfReader source, int index)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, source.PageCount);
+        var page = new PdfPage(this, source, index);
+        _pages.Add(page);
+        return page;
+    }
+
+    /// <summary>
+    /// Combines whole PDF files into one, in order. Resources that are identical across the
+    /// inputs, such as a logo or a font subset repeated in every invoice of a batch, are stored once.
+    /// </summary>
+    public static PdfDocument Merge(IEnumerable<byte[]> pdfs)
+    {
+        ArgumentNullException.ThrowIfNull(pdfs);
+        var doc = new PdfDocument { PrintAtActualSize = false };
+        foreach (byte[] pdf in pdfs) doc.ImportPages(PdfReader.Open(pdf));
+        return doc;
+    }
+
     public byte[] ToArray()
     {
         using var ms = new MemoryStream(64 * 1024);
@@ -75,11 +113,21 @@ public sealed class PdfDocument
         // Page content streams.
         var pageIds = new int[_pages.Count];
         var contentIds = new int[_pages.Count];
+        PageImporter? importer = null;
         for (int i = 0; i < _pages.Count; i++)
         {
             pageIds[i] = w.Reserve();
+            PdfPage page = _pages[i];
+            if (page.IsImported)
+            {
+                if (!page.Canvas.IsEmpty)
+                    throw new NotSupportedException("Drawing on an imported page is not supported.");
+                importer ??= new PageImporter(w, Compression);
+                importer.RegisterPage(page.Source!, page.SourcePage!, pageIds[i]);
+                continue;
+            }
             contentIds[i] = w.Reserve();
-            w.WriteStream(contentIds[i], "", _pages[i].Canvas.Content, compress: Compression != CompressionLevel.NoCompression);
+            w.WriteStream(contentIds[i], "", page.Canvas.Content, compress: Compression != CompressionLevel.NoCompression);
         }
 
         // Shared resources: only fonts that were actually used get embedded.
@@ -104,6 +152,11 @@ public sealed class PdfDocument
 
         for (int i = 0; i < _pages.Count; i++)
         {
+            if (_pages[i].IsImported)
+            {
+                importer!.WritePage(_pages[i].Source!, _pages[i].SourcePage!, pageIds[i], pagesId);
+                continue;
+            }
             b.Reset();
             b.Ascii("<< /Type /Page /Parent ").Int(pagesId).Ascii(" 0 R /MediaBox [0 0 ")
                 .Num(_pages[i].Width).Sp().Num(_pages[i].Height).Ascii("] /Resources ").Int(resourcesId)

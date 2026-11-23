@@ -221,29 +221,60 @@ public sealed class TrueTypeFont
             }
         }
 
+        // Glyph ids are kept, but nothing after the highest kept glyph is needed.
+        int glyphCount = Array.LastIndexOf(keep, true) + 1;
+
         using var glyfOut = new MemoryStream();
-        var locaOut = new byte[(GlyphCount + 1) * 4];
-        for (int g = 0; g < GlyphCount; g++)
+        var offsets = new uint[glyphCount + 1];
+        for (int g = 0; g < glyphCount; g++)
         {
-            BinaryPrimitives.WriteUInt32BigEndian(locaOut.AsSpan(g * 4), (uint)glyfOut.Length);
+            offsets[g] = (uint)glyfOut.Length;
             if (!keep[g]) continue;
             int len = (int)(_loca[g + 1] - _loca[g]);
             glyfOut.Write(_d, glyf + (int)_loca[g], len);
             while (glyfOut.Length % 4 != 0) glyfOut.WriteByte(0);
         }
-        BinaryPrimitives.WriteUInt32BigEndian(locaOut.AsSpan(GlyphCount * 4), (uint)glyfOut.Length);
+        offsets[glyphCount] = (uint)glyfOut.Length;
+
+        // Short loca (offsets / 2 in 16 bits) when the glyph data allows it: half the size.
+        bool shortLoca = glyfOut.Length <= 0x1FFFE;
+        var locaOut = new byte[(glyphCount + 1) * (shortLoca ? 2 : 4)];
+        for (int g = 0; g <= glyphCount; g++)
+        {
+            if (shortLoca) BinaryPrimitives.WriteUInt16BigEndian(locaOut.AsSpan(g * 2), (ushort)(offsets[g] / 2));
+            else BinaryPrimitives.WriteUInt32BigEndian(locaOut.AsSpan(g * 4), offsets[g]);
+        }
 
         byte[] head = _d.AsSpan(Table("head"), _tables["head"].Length).ToArray();
         BinaryPrimitives.WriteUInt32BigEndian(head.AsSpan(8), 0);   // checkSumAdjustment, filled in below
-        BinaryPrimitives.WriteInt16BigEndian(head.AsSpan(50), 1);   // long loca format
+        BinaryPrimitives.WriteInt16BigEndian(head.AsSpan(50), (short)(shortLoca ? 0 : 1));
+
+        byte[] maxp = _d.AsSpan(Table("maxp"), _tables["maxp"].Length).ToArray();
+        BinaryPrimitives.WriteUInt16BigEndian(maxp.AsSpan(4), (ushort)glyphCount);
+
+        // Horizontal metrics for the remaining glyphs; unused entries are zeroed so they compress away.
+        byte[] hhea = _d.AsSpan(Table("hhea"), _tables["hhea"].Length).ToArray();
+        int numHMetrics = Math.Min(BinaryPrimitives.ReadUInt16BigEndian(hhea.AsSpan(34)), glyphCount);
+        BinaryPrimitives.WriteUInt16BigEndian(hhea.AsSpan(34), (ushort)numHMetrics);
+        int hmtx = Table("hmtx");
+        var hmtxOut = new byte[numHMetrics * 4 + (glyphCount - numHMetrics) * 2];
+        for (int g = 0; g < glyphCount; g++)
+        {
+            if (!keep[g] && g != numHMetrics - 1) continue; // the last full metric also serves later glyphs
+            if (g < numHMetrics) _d.AsSpan(hmtx + g * 4, 4).CopyTo(hmtxOut.AsSpan(g * 4));
+            else _d.AsSpan(hmtx + numHMetrics * 4 + (g - numHMetrics) * 2, 2).CopyTo(hmtxOut.AsSpan(numHMetrics * 4 + (g - numHMetrics) * 2));
+        }
 
         var tables = new SortedDictionary<string, byte[]>(StringComparer.Ordinal)
         {
             ["glyf"] = glyfOut.ToArray(),
             ["head"] = head,
+            ["hhea"] = hhea,
+            ["hmtx"] = hmtxOut,
             ["loca"] = locaOut,
+            ["maxp"] = maxp,
         };
-        foreach (string tag in (string[])["cvt ", "fpgm", "hhea", "hmtx", "maxp", "prep"])
+        foreach (string tag in (string[])["cvt ", "fpgm", "prep"])
             if (_tables.TryGetValue(tag, out var t)) tables[tag] = _d.AsSpan(t.Offset, t.Length).ToArray();
 
         int count = tables.Count;

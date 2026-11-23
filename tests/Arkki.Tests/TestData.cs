@@ -12,6 +12,9 @@ internal static class TestData
     public static readonly TrueTypeFont Regular = LoadFont("LiberationSans-Regular.ttf");
     public static readonly TrueTypeFont Bold = LoadFont("LiberationSans-Bold.ttf");
 
+    /// <summary>A file from <c>Data/Pdf</c>; see the README there for how each was made.</summary>
+    public static byte[] Pdf(string name) => File.ReadAllBytes(Path.Combine(Root, "tests", "Arkki.Tests", "Data", "Pdf", name + ".pdf"));
+
     public static FinvoiceInvoice LoadInvoice() => FinvoiceReader.Load(FinvoicePath);
 
     private static TrueTypeFont LoadFont(string file) =>

@@ -19,13 +19,25 @@ Arkki.Pdf        Layout:   Element tree -> Fragments -> pages          (FlowDocu
                  Canvas:   immediate-mode drawing, top-left origin     (PdfCanvas)
                  Objects:  fonts, images, barcodes                     (PdfFont, PdfImage, Code128)
                  Writer:   objects, streams, xref                      (PdfWriter, internal)
+                 Reader:   xref, objects, page tree of existing files  (PdfReader)
+                 Merging:  copy pages and what they reference          (PageImporter, internal)
 ```
 
 - **Writer.** Objects are serialized straight to the output stream; only offsets are kept.
 - **Fonts.** `TrueTypeFont` is parsed once and is immutable. Each document tracks the glyphs it
   uses and embeds a subset as a CID font (Identity-H) with a ToUnicode map, so text stays
   searchable. Subsetting keeps glyph ids, so content streams need no re-mapping.
-- **Images.** `PdfImage` is decoded and compressed once, then reused by every document.
+- **Images.** `PdfImage` is decoded and compressed once, then reused by every document. A PNG
+  is stored in the smallest lossless form found: grey for grey RGB, an indexed palette for up to
+  256 colours, and Flate with per-row PNG prediction only when that beats plain Flate.
+- **Reader.** `PdfReader` parses the cross-reference (tables, streams, `/Prev` chains, hybrid
+  files) and falls back to scanning for `n g obj` when it is missing or wrong. Objects are parsed
+  on demand; stream data is never decoded except for cross-reference and object streams.
+- **Merging.** Imported pages are written by `PageImporter`, which copies each referenced object
+  once per source and writes objects with identical bytes once in total, keyed by SHA-256. The
+  logo and fonts shared by a batch of invoices are therefore stored once. References to pages
+  that are not imported (links, outlines) become null so they do not pull the rest of the source
+  in. Thumbnails and application private data (`/Thumb`, `/PieceInfo`) are dropped.
 - **Layout.** Every element answers one question: "given this width and height, what fits?"
   The answer is `Full`, `Partial` (with a remainder for the next page) or `None`. Layout
   produces fragments; drawing happens after pagination, so "page 2 (5)" needs no second pass.
@@ -33,15 +45,15 @@ Arkki.Pdf        Layout:   Element tree -> Fragments -> pages          (FlowDocu
 ## Source layout
 
 Files are grouped by feature, one public type per file. Namespaces are coarser than folders:
-each package has its root namespace, and `Arkki.Pdf` adds `Fonts`, `Images`, `Barcodes` and
-`Layout`. Folders below those never add a namespace, so one `using` covers a feature area.
+each package has its root namespace, and `Arkki.Pdf` adds `Fonts`, `Barcodes`, `Layout` and
+`Reading`. Folders below those never add a namespace, so one `using` covers a feature area.
 
 ```
 src/Arkki.Pdf/
   Document/      PdfDocument, PdfPage, PdfInfo                      (Arkki.Pdf)
   Drawing/       PdfCanvas, Color, Unit, PageSize                   (Arkki.Pdf)
-  Fonts/         TrueTypeFont, PdfFont                              (Arkki.Pdf.Fonts)
-  Images/        PdfImage                                           (Arkki.Pdf.Images)
+  Fonts/         TrueTypeFont (Arkki.Pdf.Fonts), PdfFont (Arkki.Pdf)
+  Images/        PdfImage, lossless image encoder                   (Arkki.Pdf)
   Barcodes/      Code128                                            (Arkki.Pdf.Barcodes)
   Layout/        element tree and pagination                        (Arkki.Pdf.Layout)
     Core/        Element, Fragment, LayoutResult, Len, modifiers
@@ -50,6 +62,8 @@ src/Arkki.Pdf/
     Content/     Spacer, Rule, ImageBox, Custom
     Tables/      Table, TableColumn
     Pagination/  FlowDocument, Margins, PageContext
+  Reading/       PdfReader, parser, object model                    (Arkki.Pdf.Reading)
+  Merging/       PageImporter                                       (Arkki.Pdf.Merging, internal)
   Internal/      PDF object writer, byte buffer
 samples/Arkki.Samples.Finvoice/   not part of the library          (Arkki.Samples.Finvoice)
   Payments/      Iban, PaymentReference, BankBarcode
@@ -112,7 +126,7 @@ Open points, to be checked against a printed original:
 
 Library:
 
-1. Reading existing PDFs and importing their pages, to merge documents.
+1. Text extraction from read pages, for tests that assert on what a reader sees.
 2. Rich text: mixed styles in one paragraph, tab stops, hyphenation.
 3. Table cells spanning columns; table rows that split across pages.
 4. PDF/A-3b (XMP, output intent) and embedded file attachments; veraPDF in CI.

@@ -13,6 +13,13 @@ internal static class Assert
         Console.WriteLine($"FAIL  {name}{(detail is null ? "" : "  -> " + detail)}");
     }
 
+    public static void Throws<T>(string name, Action action) where T : Exception
+    {
+        try { action(); Check(name, false, "no exception"); }
+        catch (T) { Check(name, true); }
+        catch (Exception e) { Check(name, false, e.GetType().Name + ": " + e.Message); }
+    }
+
     public static void Equal<T>(string name, T expected, T actual) =>
         Check(name, EqualityComparer<T>.Default.Equals(expected, actual), $"expected '{expected}', got '{actual}'");
 }

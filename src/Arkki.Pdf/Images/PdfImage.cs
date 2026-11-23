@@ -12,49 +12,49 @@ namespace Arkki.Pdf;
 /// </summary>
 public sealed class PdfImage
 {
-    private readonly byte[] _data;      // JPEG file bytes, or zlib-compressed samples
-    private readonly byte[]? _alpha;    // zlib-compressed soft mask
-    private readonly string _colorSpace;
-    private readonly bool _isJpeg;
-    private readonly bool _invertCmyk;
+    private readonly string _entries;   // dictionary entries after /Height: colour space, bits, filter
+    private readonly byte[] _data;      // encoded samples (JPEG file bytes for DCTDecode)
+    private readonly ImageEncoder.Encoded? _mask;
 
-    private PdfImage(int width, int height, string colorSpace, byte[] data, byte[]? alpha, bool isJpeg, bool invertCmyk)
+    private PdfImage(int width, int height, string entries, byte[] data, ImageEncoder.Encoded? mask)
     {
         Width = width; Height = height;
-        _colorSpace = colorSpace; _isJpeg = isJpeg; _invertCmyk = invertCmyk;
-        _data = isJpeg ? data : Deflate(data);
-        _alpha = alpha is null ? null : Deflate(alpha);
+        _entries = entries; _data = data; _mask = mask;
     }
 
     public int Width { get; }
     public int Height { get; }
 
+    /// <summary>Size of the encoded image data in bytes, soft mask included: what embedding it adds to a file.</summary>
+    public int EncodedLength => _data.Length + (_mask?.Data.Length ?? 0);
+
     /// <summary>Loads a PNG or JPEG image.</summary>
-    public static PdfImage Load(byte[] data)
+    public static PdfImage Load(byte[] data) => Load(data, 0, 0);
+
+    /// <summary>
+    /// Loads a PNG or JPEG image, shrinking a PNG that is larger than
+    /// <paramref name="maxPixelWidth"/> × <paramref name="maxPixelHeight"/> (0 means no limit).
+    /// Pick the limits from the printed size: a 60 mm wide logo needs about 710 pixels at 300 dpi.
+    /// JPEG data is never re-encoded, so a JPEG keeps its size.
+    /// </summary>
+    public static PdfImage Load(byte[] data, int maxPixelWidth, int maxPixelHeight)
     {
-        if (data.Length > 8 && data[0] == 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G') return LoadPng(data);
+        ArgumentNullException.ThrowIfNull(data);
+        if (data.Length > 8 && data[0] == 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G') return LoadPng(data, maxPixelWidth, maxPixelHeight);
         if (data.Length > 4 && data[0] == 0xFF && data[1] == 0xD8) return LoadJpeg(data);
         throw new NotSupportedException("Unsupported image format. Supported formats: PNG, JPEG.");
     }
 
-    private static byte[] Deflate(byte[] raw)
-    {
-        using var ms = new MemoryStream(raw.Length / 4 + 64);
-        using (var z = new ZLibStream(ms, CompressionLevel.SmallestSize, leaveOpen: true)) z.Write(raw);
-        return ms.ToArray();
-    }
-
     internal void Write(PdfWriter w, int id)
     {
-        string dict = $"/Type /XObject /Subtype /Image /Width {Width} /Height {Height} /ColorSpace /{_colorSpace} /BitsPerComponent 8";
-        if (_alpha is not null)
+        string dict = $"/Type /XObject /Subtype /Image /Width {Width} /Height {Height} {_entries}";
+        if (_mask is { } mask)
         {
             int maskId = w.Reserve();
-            w.WriteEncodedStream(maskId, $"/Type /XObject /Subtype /Image /Width {Width} /Height {Height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode", _alpha);
+            w.WriteEncodedStream(maskId, $"/Type /XObject /Subtype /Image /Width {Width} /Height {Height} {mask.Entries}", mask.Data);
             dict += $" /SMask {maskId} 0 R";
         }
-        if (_isJpeg && _invertCmyk) dict += " /Decode [1 0 1 0 1 0 1 0]";
-        w.WriteEncodedStream(id, dict + (_isJpeg ? " /Filter /DCTDecode" : " /Filter /FlateDecode"), _data);
+        w.WriteEncodedStream(id, dict, _data);
     }
 
     // ---- JPEG ----------------------------------------------------------------------------
@@ -77,7 +77,8 @@ public sealed class PdfImage
                 int width = BinaryPrimitives.ReadUInt16BigEndian(d.AsSpan(pos + 7));
                 int components = d[pos + 9];
                 string cs = components switch { 1 => "DeviceGray", 3 => "DeviceRGB", 4 => "DeviceCMYK", _ => throw new NotSupportedException("Unsupported JPEG component count.") };
-                return new PdfImage(width, height, cs, d, null, isJpeg: true, invertCmyk: components == 4 && adobe);
+                string decode = components == 4 && adobe ? " /Decode [1 0 1 0 1 0 1 0]" : "";
+                return new PdfImage(width, height, $"/ColorSpace /{cs} /BitsPerComponent 8{decode} /Filter /DCTDecode", d, null);
             }
             pos += 2 + len;
         }
@@ -86,7 +87,7 @@ public sealed class PdfImage
 
     // ---- PNG -----------------------------------------------------------------------------
 
-    private static PdfImage LoadPng(byte[] d)
+    private static PdfImage LoadPng(byte[] d, int maxWidth, int maxHeight)
     {
         int width = 0, height = 0, depth = 0, colorType = 0, interlace = 0;
         byte[]? palette = null, trns = null;
@@ -187,7 +188,10 @@ public sealed class PdfImage
 
         // An alpha channel that is fully opaque carries no information; skip the soft mask.
         if (alpha is not null && alpha.AsSpan().IndexOfAnyExcept((byte)255) < 0) alpha = null;
-        return new PdfImage(width, height, rgb ? "DeviceRGB" : "DeviceGray", color, alpha, isJpeg: false, invertCmyk: false);
+        (color, alpha, width, height) = ImageEncoder.Downscale(color, alpha, width, height, outChannels, maxWidth, maxHeight);
+        ImageEncoder.Encoded body = ImageEncoder.EncodeColor(color, width, height, outChannels);
+        ImageEncoder.Encoded? mask = alpha is null ? null : ImageEncoder.EncodeAlpha(alpha, width, height);
+        return new PdfImage(width, height, body.Entries, body.Data, mask);
     }
 
     private static byte Sample(ReadOnlySpan<byte> row, int index, int depth, bool scale)

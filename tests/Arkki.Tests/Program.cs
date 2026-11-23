@@ -5,6 +5,9 @@ Code128Tests.Run();
 TrueTypeFontTests.Run();
 LayoutTests.Run();
 PdfDocumentTests.Run();
+PdfReaderTests.Run();
+MergeTests.Run();
+FileSizeTests.Run();
 
 // The Finvoice sample
 BankBarcodeTests.Run();

@@ -39,6 +39,34 @@ new FlowDocument
 doc.Save(stream);
 ```
 
+## Merging PDF files
+
+```csharp
+using Arkki.Pdf.Reading;
+
+// Whole files, in order. Pages are copied, not re-rendered.
+byte[] batch = PdfDocument.Merge(invoicePdfs).ToArray();
+
+// Or pick pages, from files written by any producer.
+var doc = new PdfDocument();
+doc.ImportPages(PdfReader.Open(File.ReadAllBytes("agreement.pdf")));
+doc.ImportPage(PdfReader.Open(File.ReadAllBytes("appendix.pdf")), 0);
+```
+
+The reader handles cross-reference tables and streams, object streams, incremental updates and
+damaged cross-references. Encrypted files are rejected.
+
+## Small files
+
+- Fonts are subset to the glyphs a document uses.
+- PNG images are stored losslessly in the cheapest form that fits: grey instead of RGB, a palette
+  for up to 256 colours, PNG row prediction when it helps, and no soft mask for opaque alpha.
+  `PdfImage.Load(data, maxPixelWidth, maxPixelHeight)` shrinks an image larger than it will
+  print; at 300 dpi a 60 mm wide logo needs about 710 pixels. JPEG data is embedded as is.
+- An image is embedded once however many pages show it.
+- Merging stores identical objects once, so a batch of invoices with the same logo carries the
+  logo once, and streams that a producer left uncompressed are compressed.
+
 ## The invoice sample
 
 ```csharp
@@ -78,7 +106,8 @@ with `Optimal`, single-threaded, at roughly 100 kB including the logo and two su
 
 ## Verification
 
-- `tests/Arkki.Tests` checks all 18 worked examples of Finance Finland's Bank Bar Code Guide 5.3,
+- `tests/Arkki.Tests` reads and merges files written by Ghostscript, LibreOffice, qpdf and pypdf
+  (see `tests/Arkki.Tests/Data/Pdf`), checks file sizes, and checks all 18 worked examples of Finance Finland's Bank Bar Code Guide 5.3,
   reference and IBAN validation, the Finvoice reader (UTF-8 and ISO-8859-15), deterministic
   output and parallel rendering.
 - `tools/measure_giro.py` renders the form at 600 dpi and measures every line and the barcode

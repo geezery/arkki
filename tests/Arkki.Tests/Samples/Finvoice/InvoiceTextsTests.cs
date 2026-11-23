@@ -32,11 +32,4 @@ internal static class InvoiceTextsTests
     private static string AddKey(string json, string member) => json.Insert(json.IndexOf('{') + 1, member + ",");
 
     private static MemoryStream Json(string text) => new(Encoding.UTF8.GetBytes(text));
-
-    private static void Throws<T>(string name, Action action) where T : Exception
-    {
-        try { action(); Check(name, false, "no exception"); }
-        catch (T) { Check(name, true); }
-        catch (Exception e) { Check(name, false, e.GetType().Name + ": " + e.Message); }
-    }
 }

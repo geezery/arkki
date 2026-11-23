@@ -45,10 +45,13 @@ internal sealed class PdfWriter
     }
 
     /// <summary>Writes a non-stream object whose body is already serialized.</summary>
-    public void WriteObject(int id, ByteBuf body)
+    public void WriteObject(int id, ByteBuf body) => WriteObject(id, body.Span);
+
+    /// <summary>Writes an object whose body (a value, or a stream with its dictionary) is already serialized.</summary>
+    public void WriteObject(int id, ReadOnlySpan<byte> body)
     {
         Begin(id);
-        Raw(body.Span);
+        Raw(body);
         Raw("\nendobj\n"u8);
     }
 
