@@ -15,15 +15,15 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Copy docs/wiki to the wiki
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if ! git clone "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki; then
-            echo "::error::The wiki has no pages yet. Open https://github.com/${GITHUB_REPOSITORY}/wiki, save a first page once, and run this workflow again."
-            exit 1
+            echo "::warning::The wiki has no pages yet, so nothing was copied. Open https://github.com/${GITHUB_REPOSITORY}/wiki, save a first page once, and run this workflow again."
+            exit 0
           fi
           rsync -a --delete --exclude .git docs/wiki/ wiki/
           cd wiki
