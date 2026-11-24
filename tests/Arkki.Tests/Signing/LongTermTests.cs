@@ -28,10 +28,12 @@ internal static class LongTermTests
     /// <summary>A damaged signed file ends in an answer or in the reader's own exceptions, whatever byte is hit.</summary>
     private static void Hostile(X509Certificate2Collection roots, byte[] archived)
     {
-        var random = new Random(20261124);
+        // ARKKI_FUZZ_ITERATIONS and ARKKI_FUZZ_SEED widen the run, as they do for the reader's fuzz test.
+        int iterations = int.TryParse(Environment.GetEnvironmentVariable("ARKKI_FUZZ_ITERATIONS"), out int n0) ? Math.Max(n0, 400) : 400;
+        var random = new Random(int.TryParse(Environment.GetEnvironmentVariable("ARKKI_FUZZ_SEED"), out int seed) ? seed : 20261124);
         int tail = archived.Length / 2; // the signatures, the validation data and the timestamp are in the later half
         string? broken = null;
-        for (int i = 0; i < 400 && broken is null; i++)
+        for (int i = 0; i < iterations && broken is null; i++)
         {
             byte[] file = (byte[])archived.Clone();
             for (int n = random.Next(1, 4); n > 0; n--) file[tail + random.Next(archived.Length - tail)] = (byte)random.Next(256);

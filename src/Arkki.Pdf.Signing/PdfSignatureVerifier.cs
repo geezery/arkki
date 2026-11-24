@@ -144,9 +144,21 @@ public static class PdfSignatureVerifier
             chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck; // revocation is checked below, with the file's own data
             chain.ChainPolicy.DisableCertificateDownloads = true;
             chain.ChainPolicy.VerificationTime = at.UtcDateTime;
-            bool trusted = chain.Build(cert);
+            // A damaged certificate in the file can make the platform's chain builder throw instead of answering.
+            bool trusted;
+            string reason;
+            try
+            {
+                trusted = chain.Build(cert);
+                reason = string.Join("; ", chain.ChainStatus.Select(s => s.StatusInformation.Trim()));
+            }
+            catch (Exception e) when (e is CryptographicException or ArgumentException)
+            {
+                trusted = false;
+                reason = e.Message;
+            }
             info = info with { ChainTrusted = trusted };
-            if (!trusted) info = info with { Problem = "The certificate does not chain to a trusted root: " + string.Join("; ", chain.ChainStatus.Select(s => s.StatusInformation.Trim())) };
+            if (!trusted) info = info with { Problem = "The certificate does not chain to a trusted root: " + reason };
         }
 
         // Revocation: first with what the file carries, which is what makes a signature long-term; then with what can be fetched.
