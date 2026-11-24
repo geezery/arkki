@@ -100,13 +100,19 @@ internal static class SigningTests
         var objstm = External.Run("qpdf", original, "--object-streams=generate", "{file}", "-");
         if (objstm is { Exit: 0 })
         {
+            // qpdf writes the result to standard output: where it may create files differs between systems.
             string path = Path.Combine(Path.GetTempPath(), $"arkki-{Guid.NewGuid():N}.pdf");
             File.WriteAllBytes(path, original);
             var psi = new System.Diagnostics.ProcessStartInfo("qpdf") { RedirectStandardOutput = true, UseShellExecute = false };
-            foreach (string a in new[] { "--object-streams=generate", path, path + ".out" }) psi.ArgumentList.Add(a);
-            using (var p = System.Diagnostics.Process.Start(psi)!) p.WaitForExit();
-            byte[] streamed = File.ReadAllBytes(path + ".out");
-            File.Delete(path); File.Delete(path + ".out");
+            foreach (string a in new[] { "--object-streams=generate", path, "-" }) psi.ArgumentList.Add(a);
+            var output = new MemoryStream();
+            using (var p = System.Diagnostics.Process.Start(psi)!)
+            {
+                p.StandardOutput.BaseStream.CopyTo(output);
+                p.WaitForExit();
+            }
+            byte[] streamed = output.ToArray();
+            File.Delete(path);
             byte[] signedStreamed = PdfSigner.Sign(streamed, pki.Signer);
             Check("xref-stream file: signature intact", PdfSignatureVerifier.Verify(signedStreamed, roots)[0].IsIntact);
             Check("xref-stream file: update uses an xref stream", IndexOf(signedStreamed.AsSpan(streamed.Length).ToArray(), "/Type /XRef"u8) >= 0);
