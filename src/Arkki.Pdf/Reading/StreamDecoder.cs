@@ -32,19 +32,33 @@ internal static class StreamDecoder
         return data;
     }
 
+    /// <summary>The most one stream may decode to; more is treated as a decompression bomb.</summary>
+    internal const int MaxDecodedLength = 256 * 1024 * 1024;
+
     private static byte[] Inflate(byte[] data)
     {
         using var input = new MemoryStream(data);
-        using var output = new MemoryStream(data.Length * 4 + 64);
+        using var output = new MemoryStream(Math.Min(data.Length * 4 + 64, 1 << 20));
+        bool bomb = false;
         try
         {
             using var z = new ZLibStream(input, CompressionMode.Decompress);
-            z.CopyTo(output);
+            var buffer = new byte[81920];
+            int read;
+            while ((read = z.Read(buffer)) > 0)
+            {
+                if (output.Length + read > MaxDecodedLength)
+                {
+                    bomb = true;
+                    throw new InvalidDataException($"A stream decodes to more than {MaxDecodedLength / (1024 * 1024)} MB; it is refused as a decompression bomb.");
+                }
+                output.Write(buffer, 0, read);
+            }
         }
-        catch (InvalidDataException)
+        catch (IOException e) when (!bomb)
         {
             // Truncated or slightly corrupt data: keep what was decoded (readers commonly do).
-            if (output.Length == 0) throw;
+            if (output.Length == 0) throw new InvalidDataException("A compressed stream is damaged.", e);
         }
         return output.ToArray();
     }

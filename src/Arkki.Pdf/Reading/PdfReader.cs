@@ -63,7 +63,8 @@ public sealed class PdfReader
     {
         ArgumentNullException.ThrowIfNull(data);
         var reader = new PdfReader(data) { _password = password };
-        reader.Load();
+        try { reader.Load(); }
+        catch (Exception e) when (IsDamage(e) && e is not InvalidDataException) { throw new InvalidDataException("The PDF file is damaged beyond repair: " + e.Message, e); }
         return reader;
     }
 
@@ -298,9 +299,13 @@ public sealed class PdfReader
                     throw new InvalidDataException("Malformed cross-reference table.");
                 }
                 int start = int.Parse(startTok), count = int.Parse(countTok);
+                // Each entry takes 20 bytes; a count the rest of the file cannot hold is damage, not a reason to allocate.
+                if ((long)count * 18 > _data.Length - p.Position || (long)start + count > int.MaxValue)
+                    throw new InvalidDataException("A cross-reference subsection claims more entries than the file holds.");
                 for (int i = 0; i < count; i++)
                 {
                     string off = p.ReadToken(), gen = p.ReadToken(), kind = p.ReadToken();
+                    if (kind is not ("n" or "f") || !PdfParser.IsInteger(gen)) throw new InvalidDataException("Malformed cross-reference entry.");
                     int num = start + i;
                     if (_xref.ContainsKey(num)) continue; // a newer section already defined it
                     if (kind == "n" && long.TryParse(off, out long o) && o > 0)
@@ -322,6 +327,7 @@ public sealed class PdfReader
         if (w.Length < 3) throw new InvalidDataException("Cross-reference stream has no valid /W.");
         int size = (xs.Get("Size") as PdfNumber)?.IntValue ?? 0;
         List<int> index = (xs.Get("Index") as PdfArray)?.Items.Select(i => (i as PdfNumber)?.IntValue ?? 0).ToList() ?? [0, size];
+        if (w.Take(3).Any(x => x < 0 || x > 8) || w[1] == 0) throw new InvalidDataException("Cross-reference stream has an invalid /W.");
         int entryLength = w[0] + w[1] + w[2], pos = 0;
         for (int k = 0; k + 1 < index.Count; k += 2)
         {
@@ -441,6 +447,7 @@ public sealed class PdfReader
             PdfValue value;
             if (e.Type == 1)
             {
+                if (e.Offset < 0 || e.Offset >= _data.Length) throw new InvalidDataException($"Object {number} has an offset outside the file.");
                 var p = new PdfParser(_data) { Position = (int)e.Offset, ResolveLength = r => Resolve(r) };
                 var (num, gen) = p.ReadObjectHeader();
                 if (num != number) throw new InvalidDataException($"Object {number} is not at its cross-reference offset.");
@@ -456,6 +463,10 @@ public sealed class PdfReader
             }
             _cache[number] = value;
             return value;
+        }
+        catch (Exception ex) when (IsDamage(ex) && ex is not InvalidDataException)
+        {
+            throw new InvalidDataException($"Object {number} is damaged: {ex.Message}", ex);
         }
         finally { _resolving.Remove(number); }
     }

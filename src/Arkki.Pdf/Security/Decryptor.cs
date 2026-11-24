@@ -125,8 +125,10 @@ internal sealed class Decryptor
         if (data.Length < 16) return [];
         using var a = Aes.Create();
         a.Key = key;
-        try { return a.DecryptCbc(data.AsSpan(16), data.AsSpan(0, 16), PaddingMode.PKCS7); }
-        catch (CryptographicException) { return a.DecryptCbc(data.AsSpan(16), data.AsSpan(0, 16), PaddingMode.None); }
+        // A damaged value (not whole blocks, bad padding) decrypts as far as it can rather than failing the file.
+        ReadOnlySpan<byte> blocks = data.AsSpan(16, (data.Length - 16) / 16 * 16);
+        try { return a.DecryptCbc(blocks, data.AsSpan(0, 16), PaddingMode.PKCS7); }
+        catch (CryptographicException) { return a.DecryptCbc(blocks, data.AsSpan(0, 16), PaddingMode.None); }
     }
 }
 

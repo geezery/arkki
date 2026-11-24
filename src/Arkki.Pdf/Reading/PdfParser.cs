@@ -25,6 +25,7 @@ internal sealed class PdfParser(ReadOnlyMemory<byte> data)
     public void SkipWhiteAndComments()
     {
         ReadOnlySpan<byte> s = Span;
+        if ((uint)Position > (uint)s.Length) throw new InvalidDataException($"A position ({Position}) points outside the file.");
         while (Position < s.Length)
         {
             byte b = s[Position];
