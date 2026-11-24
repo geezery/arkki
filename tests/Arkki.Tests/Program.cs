@@ -10,6 +10,8 @@ RowStyleTests.Run();
 RichTextTests.Run();
 TextFlowTests.Run();
 SigningTests.Run();
+VisibleSignatureTests.Run();
+LongTermTests.Run();
 FuzzTests.Run();
 ProductionTests.Run();
 ValidationTests.Run();

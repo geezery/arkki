@@ -83,6 +83,23 @@ internal static class ReadmeTests
         foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(signed, new X509Certificate2Collection(pki.Root)))
             _ = $"{s.FieldName}: intact {s.IsIntact}, whole {s.CoversWholeDocument}, {s.Level}, trusted {s.ChainTrusted}";
 
-        Check("README examples run", reader.PageCount > 1 && signed.Length > pdf.Length);
+        byte[] visible = PdfSigner.Sign(pdf, pki.Signer, new PdfSignatureOptions
+        {
+            Reason = "Approved",
+            Appearance = new PdfSignatureAppearance { X = 50, Y = 700, Width = 220, Height = 60, Border = true },
+        });
+        ITimestampClient authority = pki.TimestampAuthority();
+        byte[] timestamped = PdfSigner.SignAsync(pdf, pki.Signer, new PdfSignatureOptions { Timestamp = authority }).GetAwaiter().GetResult();
+        var issuerCertificates = new X509Certificate2Collection(pki.Root);
+        byte[] longTerm = PdfSigner.AddValidationDataAsync(timestamped, pki.Revocation(), issuerCertificates).GetAwaiter().GetResult();
+        byte[] archived = PdfSigner.AddDocumentTimestampAsync(longTerm, authority).GetAwaiter().GetResult();
+        foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(archived, issuerCertificates))
+            _ = $"{s.FieldName}: intact {s.IsIntact}, whole {s.CoversWholeDocument}, {s.Level}, trusted {s.ChainTrusted}, revocation {s.Revocation}";
+        formPage.AddSignatureField("approval", 50, 300, 200, 60);
+        byte[] inField = PdfSigner.Sign(formDoc.ToArray(), pki.Signer, new PdfSignatureOptions { FieldName = "approval", Certification = PdfCertificationLevel.FormFilling });
+        byte[] external = PdfSigner.SignAsync(pdf, pki.External(pki.Signer), new PdfSignatureOptions()).GetAwaiter().GetResult();
+
+        Check("README examples run", reader.PageCount > 1 && signed.Length > pdf.Length && visible.Length > signed.Length
+            && archived.Length > longTerm.Length && inField.Length > 0 && external.Length > pdf.Length);
     }
 }

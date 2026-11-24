@@ -6,8 +6,24 @@ namespace Arkki.Pdf.Signing;
 /// <summary>What <see cref="PdfSigner"/> writes into a signature. Every property has a working default.</summary>
 public sealed class PdfSignatureOptions
 {
-    /// <summary>The signature field's name; it must not already exist in the document.</summary>
+    /// <summary>
+    /// The signature field's name. When the document has an empty signature field of this name (one made with
+    /// <c>PdfPage.AddSignatureField</c> or by another program), that field is signed; otherwise a new field is added,
+    /// and the name must be free.
+    /// </summary>
     public string FieldName { get; init; } = "Signature1";
+
+    /// <summary>
+    /// Draws the signature on the page. Null leaves a new field invisible; an existing field that has a box gets the
+    /// default appearance.
+    /// </summary>
+    public PdfSignatureAppearance? Appearance { get; init; }
+
+    /// <summary>
+    /// Makes this a certification signature: the author's signature that also says which later changes keep the
+    /// document valid. It must be the document's first signature.
+    /// </summary>
+    public PdfCertificationLevel Certification { get; init; }
 
     /// <summary>Why the document is signed ("Approved"), shown by viewers.</summary>
     public string? Reason { get; init; }
@@ -24,7 +40,7 @@ public sealed class PdfSignatureOptions
     /// <summary>The claimed signing time (the /M entry); null is now. A timestamp, when used, is the time that can be proved.</summary>
     public DateTimeOffset? SigningTime { get; init; }
 
-    /// <summary>The page the (invisible) signature field is placed on, 0-based.</summary>
+    /// <summary>The page a new signature field is placed on, 0-based. An existing field stays on its own page.</summary>
     public int PageIndex { get; init; }
 
     /// <summary>The digest algorithm: SHA-256 (default), SHA-384 or SHA-512.</summary>

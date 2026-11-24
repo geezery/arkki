@@ -129,7 +129,7 @@ internal static class SigningTests
         PyHanko(twice, pki, "two signatures", expectTimestamp: false);
     }
 
-    private static byte[] SampleDocument()
+    internal static byte[] SampleDocument()
     {
         var doc = new PdfDocument();
         PdfFont font = doc.AddFont(TestData.Regular);
@@ -141,7 +141,7 @@ internal static class SigningTests
     private static int IndexOf(byte[] data, ReadOnlySpan<byte> what) => data.AsSpan().IndexOf(what);
 
     /// <summary>poppler's pdfsig: every signature's value checks out (the test CA is not trusted there).</summary>
-    private static void PdfSigs(byte[] pdf, string name, int expected)
+    internal static void PdfSigs(byte[] pdf, string name, int expected)
     {
         var r = External.Run("pdfsig", pdf, "-nocert", "{file}");
         if (r is null) return;
@@ -150,7 +150,7 @@ internal static class SigningTests
     }
 
     /// <summary>pyHanko: intact, valid, trusted to the test root, and the timestamp valid and trusted.</summary>
-    private static void PyHanko(byte[] pdf, TestPki pki, string name, bool expectTimestamp)
+    internal static void PyHanko(byte[] pdf, TestPki pki, string name, bool expectTimestamp)
     {
         var probe = External.Run("python3", pdf, "-c", "import pyhanko.sign.validation", "{file}");
         if (probe is null || probe.Value.Exit != 0) { Console.WriteLine("skip  pyHanko is not installed: its checks are skipped"); return; }
@@ -174,7 +174,7 @@ with open(sys.argv[1], 'rb') as f:
 """;
             var r = External.Run("python3", pdf, "-c", script, "{file}", rootPath);
             if (r is null) return;
-            string[] lines = r.Value.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries).Where(l => !l.Contains("Warning", StringComparison.OrdinalIgnoreCase)).ToArray();
+            string[] lines = r.Value.Output.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries).Where(l => !l.Contains("Warning", StringComparison.OrdinalIgnoreCase)).ToArray();
             Check($"{name}: pyHanko validates every signature as intact, valid and trusted",
                 lines.Length > 0 && lines.All(l => l.Split(' ') is [_, "True", "True", "True", _]), r.Value.Output);
             if (expectTimestamp) Check($"{name}: pyHanko validates the timestamp", lines.All(l => l.EndsWith("True")), r.Value.Output);
