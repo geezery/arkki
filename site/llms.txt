@@ -2,9 +2,13 @@
 
 > Arkki is an open-source PDF library for .NET 10, written in C# as pure managed code. It creates documents with a paginating layout engine, opens and edits existing PDFs, fills and creates forms, encrypts with AES-256 and signs with PAdES. The core package has no dependencies and no native binaries, and runs the same on Windows, Linux and macOS. License: MPL-2.0.
 
+## Why it exists
+
+The complete PDF libraries for .NET are commercial, or free only under copyleft terms, or free only below a revenue limit; the unconditionally free ones each cover only a part (drawing, or reading, or wrapping a native engine). Arkki covers layout, reading, editing, forms, encryption and PAdES signing in one library with no paid edition, no revenue or seat limit and no license key. MPL-2.0 allows use in closed-source and commercial products and only requires sharing changes made to Arkki's own source files.
+
 ## Version
 
-- Current release: 1.0.0-rc.1 (the first release candidate), 2026-11-24
+- Current release: 1.0.0-rc.2 (release candidate), 2026-11-24
 - Requires .NET 10
 
 ## Packages

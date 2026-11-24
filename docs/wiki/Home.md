@@ -13,6 +13,13 @@ forms, encrypts, and signs.
 - **Deterministic.** The same input gives the same bytes.
 - **Open source** under the Mozilla Public License 2.0.
 
+- **Free for everyone.** No paid edition, no revenue or seat limit, no license
+  key, and free to use in closed-source and commercial products.
+
+Arkki exists because the complete PDF libraries for .NET are commercial, or free
+only under copyleft terms or below a revenue limit, and the unconditionally free
+ones each cover only a part of the job. Arkki is one library for all of it.
+
 Arkki is Finnish for a sheet of paper.
 
 ## Start here

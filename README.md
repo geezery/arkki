@@ -27,6 +27,24 @@ dotnet add package Arkki.Pdf.Signing --prerelease   # only for digital signature
 [Homepage](https://geezery.github.io/arkki/) · [Wiki](https://github.com/geezery/arkki/wiki) ·
 [Changelog](https://github.com/geezery/arkki/blob/main/CHANGELOG.md) · [Contributing](https://github.com/geezery/arkki/blob/main/CONTRIBUTING.md) · [Security](https://github.com/geezery/arkki/blob/main/SECURITY.md)
 
+## Why Arkki exists
+
+A .NET program that needs PDFs has had to pick between three kinds of library. The complete ones are
+commercial, or free only under copyleft terms that reach into your own program, or free only until a
+company passes a revenue limit. The ones that are free without conditions each cover a part of the job:
+one draws pages, another reads them, a third wraps a native engine or a browser that then has to be
+shipped and patched on every platform. Laying out a document, filling its form, encrypting it and signing
+it to the PAdES standard meant combining several of them, or paying.
+
+Arkki is one library for the whole job that is free for everyone:
+
+- **No price, no tiers, no limits.** Every feature is in the open-source packages. There is no paid
+  edition, no revenue or seat limit, and no license key.
+- **Free in closed-source and commercial products.** The Mozilla Public License 2.0 asks one thing: if you
+  change Arkki's own source files and distribute the result, share those files. Your own code stays yours.
+- **Nothing to trust but the code.** No native binaries and no third-party packages in the core, so what
+  you audit and deploy is this repository and .NET itself.
+
 ## Create a document
 
 A document is a tree of layout elements that flows onto as many pages as it needs:
