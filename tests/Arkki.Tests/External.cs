@@ -36,9 +36,15 @@ internal static class External
             psi.Environment["PYTHONUTF8"] = "1";
             foreach (string a in args) psi.ArgumentList.Add(a == "{file}" ? path : a);
             using var p = Process.Start(psi)!;
-            string output = p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd();
-            p.WaitForExit(60_000);
-            return (p.ExitCode, output);
+            // Both pipes are read at once: a tool that fills one while the other is being read would wait forever.
+            Task<string> errors = p.StandardError.ReadToEndAsync();
+            Task<string> text = p.StandardOutput.ReadToEndAsync();
+            if (!p.WaitForExit(120_000))
+            {
+                p.Kill(entireProcessTree: true);
+                return (-1, $"{tool} did not finish in two minutes.");
+            }
+            return (p.ExitCode, text.GetAwaiter().GetResult() + errors.GetAwaiter().GetResult());
         }
         catch (System.ComponentModel.Win32Exception)
         {
@@ -73,6 +79,12 @@ internal static class External
     /// <summary>qpdf finds no syntax or stream errors (warnings fail too). True when qpdf is not installed.</summary>
     public static void QpdfClean(string name, byte[] pdf, string? password = null)
     {
+        // ARKKI_KEEP_FILES names a folder: every file checked here is also saved there, to look at in a viewer.
+        if (Environment.GetEnvironmentVariable("ARKKI_KEEP_FILES") is { Length: > 0 } keep)
+        {
+            Directory.CreateDirectory(keep);
+            File.WriteAllBytes(Path.Combine(keep, string.Concat(name.Select(c => char.IsLetterOrDigit(c) ? c : '-')) + ".pdf"), pdf);
+        }
         var r = password is null ? Run("qpdf", pdf, "--check", "{file}") : Run("qpdf", pdf, "--check", "--password=" + password, "{file}");
         if (r is null) return;
         Assert.Check($"{name}: qpdf --check", r.Value.Exit == 0 && r.Value.Output.Contains("No syntax or stream encoding errors"), r.Value.Output.Trim());
