@@ -196,7 +196,13 @@ public sealed class PdfForm
 
     internal void Add(PdfFormField field)
     {
-        if (Find(field.Name) is not null) throw new ArgumentException($"The form already has a field named '{field.Name}'.");
+        string name = field.Name;
+        if (name.StartsWith('.') || name.EndsWith('.') || name.Contains("..", StringComparison.Ordinal))
+            throw new ArgumentException($"'{name}' is not a field name: the dots of a name separate parts, and a part cannot be empty.");
+        if (Find(name) is not null) throw new ArgumentException($"The form already has a field named '{name}'.");
+        // "customer" cannot be both a field and the parent of "customer.name".
+        if (_fields.FirstOrDefault(f => f.Name.StartsWith(name + ".", StringComparison.Ordinal) || name.StartsWith(f.Name + ".", StringComparison.Ordinal)) is { } clash)
+            throw new ArgumentException($"The form has a field named '{clash.Name}', so '{name}' cannot be a field too: one would be a part of the other's name.");
         _fields.Add(field);
     }
 

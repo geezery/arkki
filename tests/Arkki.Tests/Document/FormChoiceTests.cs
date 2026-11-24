@@ -15,6 +15,7 @@ internal static class FormChoiceTests
     {
         Created();
         RemovedPage();
+        Hierarchy();
         Foreign();
         Arguments();
     }
@@ -144,13 +145,52 @@ internal static class FormChoiceTests
         Check("a choice on a removed page is no choice", !delivery.IsChecked);
     }
 
+    /// <summary>A dotted name is a path: its parts are nodes of the form's field tree, each written once.</summary>
+    private static void Hierarchy()
+    {
+        var doc = new PdfDocument();
+        PdfPage page = doc.AddPage();
+        page.AddTextField("person.name", 72, 72, 150, 18, "Aino");
+        page.AddRadioButton("person.kind", "private", 72, 100, 12, selected: true);
+        page.AddRadioButton("person.kind", "company", 72, 120, 12);
+        page.AddComboBox("person.address.country", 72, 150, 150, 18, Countries, "Sverige");
+        page.AddCheckBox("person.address.abroad", 72, 180, 12, isChecked: true);
+        page.AddTextField("note", 72, 210, 150, 18);
+        byte[] pdf = doc.ToArray();
+        External.QpdfClean("form with a field tree", pdf);
+
+        string raw = Encoding.Latin1.GetString(pdf);
+        string T(string partial) => "/T <" + Convert.ToHexString(Encoding.ASCII.GetBytes(partial)) + ">";
+        Equal("a shared parent is one node", 1, Count(raw, T("person")));
+        Equal("a nested parent is one node", 1, Count(raw, T("address")));
+        Equal("a field is named by its last part", 1, Count(raw, T("name")));
+        Check("no name holds a dot", !raw.Contains(Convert.ToHexString(Encoding.ASCII.GetBytes("person."))));
+
+        var fields = PdfReader.Open(pdf).GetFormFields();
+        Equal("full names read back, in tree order", "person.name,person.kind,person.address.country,person.address.abroad,note",
+            string.Join(",", fields.Select(f => f.Name)));
+        var byName = fields.ToDictionary(f => f.Name);
+        Check("values under parents read back", byName["person.name"].Value == "Aino" && byName["person.kind"].Value == "private"
+            && byName["person.address.country"].Value == "Sverige" && byName["person.address.abroad"].IsChecked);
+        string? py = External.PyPdf(pdf, "f = pypdf.PdfReader(sys.argv[1]).get_fields()\nprint(f['person.name'].get('/V'), f['person.kind'].get('/V'), f['person.address.country'].get('/V'))");
+        if (py is not null) Check("pypdf reads the field tree", py.Contains("Aino /private Sverige"), py);
+
+        PdfDocument fill = PdfDocument.Open(pdf);
+        fill.Form.SetValue("person.name", "Eino");
+        fill.Form.SetValue("person.kind", "company");
+        fill.Form.SetValue("person.address.country", "Norge");
+        var after = PdfReader.Open(fill.ToArray()).GetFormFields().ToDictionary(f => f.Name);
+        Check("fields under parents are filled", after["person.name"].Value == "Eino" && after["person.kind"].Value == "company"
+            && after["person.address.country"].Value == "Norge");
+    }
+
     /// <summary>A form as other producers write it: option pairs, a radio group under a parent, chosen rows in /I.</summary>
     private static void Foreign()
     {
         byte[] pdf = BuildPdf(
             "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R 8 0 R 9 0 R] /DA (/Helv 0 Tf 0 g) >> >>",
             "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Annots [6 0 R 7 0 R 8 0 R 9 0 R] >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Resources << >> /Annots [6 0 R 7 0 R 8 0 R 9 0 R] >>",
             "<< /Type /XObject /Subtype /Form /BBox [0 0 12 12] /Length 0 >>\nstream\n\nendstream",
             "<< /FT /Btn /Ff 49152 /T (plan) /V /basic /Kids [6 0 R 7 0 R] >>",
             "<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [20 260 32 272] /AS /basic /AP << /N << /basic 4 0 R /Off 4 0 R >> >> >>",
@@ -206,6 +246,11 @@ internal static class FormChoiceTests
         Throws<ArgumentException>("combo box: options are distinct", () => page.AddComboBox("c2", 10, 80, 100, 18, ["a", "a"]));
         Throws<ArgumentNullException>("list box: options are given", () => page.AddListBox("l1", 10, 80, 100, 40, null!));
         Throws<ArgumentException>("list box: the value is an option", () => page.AddListBox("l2", 10, 80, 100, 40, Countries, "Danmark"));
+        Throws<ArgumentException>("name: no empty part", () => page.AddTextField("a..b", 10, 80, 100, 18));
+        Throws<ArgumentException>("name: no leading dot", () => page.AddCheckBox(".a", 10, 80, 12));
+        Throws<ArgumentException>("name: no trailing dot", () => page.AddRadioButton("a.", "x", 10, 80, 12));
+        Throws<ArgumentException>("name: a field is not also a parent", () => page.AddTextField("name.first", 10, 80, 100, 18));
+        Throws<ArgumentException>("name: a parent is not also a field", () => page.AddTextField("group.sub", 10, 80, 100, 18));
         Equal("a refused field is not added", "name,group", string.Join(",", doc.Form.Fields.Select(f => f.Name)));
         PdfFormField group = page.AddRadioButton("group", "b", 10, 60, 12, selected: true, readOnly: true);
         Check("the group is returned with its new state", group.Value == "b" && group.ReadOnly && group.Options.Count == 2);

@@ -81,9 +81,9 @@ public sealed class PdfPage
     }
 
     /// <summary>
-    /// Adds a text field the reader can type in. <paramref name="name"/> is the field's name in the form; a dot makes it a
-    /// child of another name, so "customer.name" and "customer.email" are grouped. <paramref name="fontSize"/> 0 sizes
-    /// the text to the box.
+    /// Adds a text field the reader can type in. <paramref name="name"/> is the field's name in the form; dots make it a
+    /// path, so "customer.name" and "customer.email" are the fields "name" and "email" under one parent, "customer".
+    /// <paramref name="fontSize"/> 0 sizes the text to the box.
     /// </summary>
     public PdfFormField AddTextField(string name, double x, double y, double width, double height, string value = "",
         double fontSize = 10, bool multiline = false, bool readOnly = false, int maxLength = 0)

@@ -11,8 +11,38 @@ internal sealed class SaveContext(PdfWriter writer, Func<PdfPage, int?> pageId)
     public PdfWriter Writer { get; } = writer;
     public Func<PdfPage, int?> PageId { get; } = pageId;
 
-    /// <summary>Fields created in this document, in creation order, for the form's /Fields.</summary>
+    /// <summary>The top of the tree of fields created in this document, in creation order, for the form's /Fields.</summary>
     public List<int> NewFields { get; } = [];
+
+    // A dotted name is a path: "customer.name" is the field "name" under the node "customer".
+    private readonly List<(string Path, int Id, int Parent, List<int> Kids)> _fieldNodes = [];
+
+    /// <summary>
+    /// Where a field with this full name goes: the object number of its parent node (0 at the top) and its own
+    /// partial name, the part after the last dot. Nodes are reserved here and written by <see cref="WriteFieldTree"/>.
+    /// </summary>
+    public (int Parent, string Partial) FieldPlace(string fullName)
+    {
+        int dot = fullName.LastIndexOf('.');
+        return dot < 0 ? (0, fullName) : (Node(fullName[..dot]), fullName[(dot + 1)..]);
+    }
+
+    /// <summary>Puts a written field under its parent node, or at the top of the form.</summary>
+    public void AddField(int id, int parent)
+    {
+        if (parent == 0) NewFields.Add(id);
+        else _fieldNodes.First(n => n.Id == parent).Kids.Add(id);
+    }
+
+    private int Node(string path)
+    {
+        foreach (var n in _fieldNodes) if (n.Path == path) return n.Id;
+        var (parent, _) = FieldPlace(path);
+        int id = Writer.Reserve();
+        _fieldNodes.Add((path, id, parent, []));
+        AddField(id, parent);
+        return id;
+    }
 
     /// <summary>Helvetica in WinAnsiEncoding, the font of generated field appearances.</summary>
     public int Helvetica => _helvetica != 0 ? _helvetica : _helvetica = WriteFont("Helvetica", " /Encoding /WinAnsiEncoding");
@@ -30,18 +60,33 @@ internal sealed class SaveContext(PdfWriter writer, Func<PdfPage, int?> pageId)
         foreach (var g in _radioGroups) if (g.Group == group) return g.Id;
         int id = Writer.Reserve();
         _radioGroups.Add((group, id, []));
-        NewFields.Add(id);
+        AddField(id, FieldPlace(group.Name).Parent);
         return id;
     }
 
     /// <summary>The buttons of a radio group written so far.</summary>
     public List<(int Id, string Value)> RadioKids(RadioGroup group) => _radioGroups.First(g => g.Group == group).Kids;
 
-    /// <summary>Writes the fields of the radio groups whose buttons were written; call once after the pages.</summary>
-    public void WriteRadioGroups()
+    /// <summary>
+    /// Writes what the fields hang from, once the pages have written the fields themselves: the radio groups whose
+    /// buttons were written, and the nodes of dotted names.
+    /// </summary>
+    public void WriteFieldTree()
     {
         foreach (var (group, id, kids) in _radioGroups) RadioButtonAnnotation.WriteGroup(this, group, id, kids);
         _radioGroups.Clear();
+        foreach (var (path, id, parent, kids) in _fieldNodes)
+        {
+            var b = new ByteBuf(96);
+            b.Ascii("<< /T ");
+            PdfSerializer.WriteString(b, PdfSerializer.TextBytes(path[(path.LastIndexOf('.') + 1)..]), hex: true);
+            if (parent != 0) b.Ascii(" /Parent ").Int(parent).Ascii(" 0 R");
+            b.Ascii(" /Kids [");
+            foreach (int kid in kids) b.Int(kid).Ascii(" 0 R ");
+            b.Ascii("] >>");
+            Writer.WriteObject(id, b);
+        }
+        _fieldNodes.Clear();
     }
 
     private int WriteFont(string baseFont, string extra)

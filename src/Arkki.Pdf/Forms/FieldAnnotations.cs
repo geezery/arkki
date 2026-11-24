@@ -13,8 +13,10 @@ internal sealed class TextFieldAnnotation(PdfPage page, string name, double x, d
         int ap = FieldAppearance.Text(ctx, Width, Height, Value, fontSize, multiline, border: true);
         int flags = (readOnly ? 1 : 0) | (multiline ? 1 << 12 : 0);
         var b = new ByteBuf(256);
+        var (parent, partial) = ctx.FieldPlace(Name);
         b.Ascii("<< /Type /Annot /Subtype /Widget /FT /Tx /T ");
-        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(Name), hex: true);
+        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(partial), hex: true);
+        if (parent != 0) b.Ascii(" /Parent ").Int(parent).Ascii(" 0 R");
         b.Ascii(" /V ");
         PdfSerializer.WriteString(b, PdfSerializer.TextBytes(Value), hex: true);
         b.Ascii(" /DA (/Helv ").Num(fontSize).Ascii(" Tf 0 g) /F 4 /Ff ").Int(flags);
@@ -23,7 +25,7 @@ internal sealed class TextFieldAnnotation(PdfPage page, string name, double x, d
         Rect(b).Ascii(" /AP << /N ").Int(ap).Ascii(" 0 R >> >>");
         int id = ctx.Writer.Reserve();
         ctx.Writer.WriteObject(id, b);
-        ctx.NewFields.Add(id);
+        ctx.AddField(id, parent);
         return id;
     }
 }
@@ -39,14 +41,16 @@ internal sealed class CheckBoxAnnotation(PdfPage page, string name, double x, do
         int on = FieldAppearance.Check(ctx, Width, Height, true, border: true), off = FieldAppearance.Check(ctx, Width, Height, false, border: true);
         string state = Checked ? "Yes" : "Off";
         var b = new ByteBuf(256);
+        var (parent, partial) = ctx.FieldPlace(Name);
         b.Ascii("<< /Type /Annot /Subtype /Widget /FT /Btn /T ");
-        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(Name), hex: true);
+        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(partial), hex: true);
+        if (parent != 0) b.Ascii(" /Parent ").Int(parent).Ascii(" 0 R");
         b.Ascii(" /V /").Ascii(state).Ascii(" /AS /").Ascii(state).Ascii(" /F 4 /Ff ").Int(readOnly ? 1 : 0)
             .Ascii(" /DA (/ZaDb 0 Tf 0 g) /MK << /BC [").Ascii(FieldAppearance.BorderColor).Ascii("] /CA (4) >> /P ").Int(pageId).Ascii(" 0 R ");
         Rect(b).Ascii(" /AP << /N << /Yes ").Int(on).Ascii(" 0 R /Off ").Int(off).Ascii(" 0 R >> >> >>");
         int id = ctx.Writer.Reserve();
         ctx.Writer.WriteObject(id, b);
-        ctx.NewFields.Add(id);
+        ctx.AddField(id, parent);
         return id;
     }
 }
@@ -87,9 +91,11 @@ internal sealed class RadioButtonAnnotation(PdfPage page, RadioGroup group, stri
         // Radio (bit 16) and NoToggleToOff (bit 15): one button of the group stays chosen.
         int flags = (1 << 15) | (1 << 14) | (group.ReadOnly ? 1 : 0);
         string value = kids.Any(k => k.Value == group.Value) ? group.Value : "Off";
+        var (parent, partial) = ctx.FieldPlace(group.Name);
         var b = new ByteBuf(256);
         b.Ascii("<< /FT /Btn /T ");
-        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(group.Name), hex: true);
+        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(partial), hex: true);
+        if (parent != 0) b.Ascii(" /Parent ").Int(parent).Ascii(" 0 R");
         b.Ascii(" /Ff ").Int(flags).Ascii(" /V /").Ascii(value).Ascii(" /DA (/ZaDb 0 Tf 0 g) /Kids [");
         foreach (var (kid, _) in kids) b.Int(kid).Ascii(" 0 R ");
         b.Ascii("] >>");
@@ -114,8 +120,10 @@ internal sealed class ChoiceFieldAnnotation(PdfPage page, string name, double x,
         // Combo is bit 18, Edit bit 19, MultiSelect bit 22.
         int flags = (readOnly ? 1 : 0) | (combo ? 1 << 17 : 0) | (combo && editable ? 1 << 18 : 0) | (multiSelect ? 1 << 21 : 0);
         var b = new ByteBuf(256 + options.Count * 24);
+        var (parent, partial) = ctx.FieldPlace(name);
         b.Ascii("<< /Type /Annot /Subtype /Widget /FT /Ch /T ");
-        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(name), hex: true);
+        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(partial), hex: true);
+        if (parent != 0) b.Ascii(" /Parent ").Int(parent).Ascii(" 0 R");
         b.Ascii(" /Ff ").Int(flags).Ascii(" /Opt [");
         foreach (string o in options) Str(b, o).Sp();
         b.Ascii("]");
@@ -136,7 +144,7 @@ internal sealed class ChoiceFieldAnnotation(PdfPage page, string name, double x,
         Rect(b).Ascii(" /AP << /N ").Int(ap).Ascii(" 0 R >> >>");
         int id = ctx.Writer.Reserve();
         ctx.Writer.WriteObject(id, b);
-        ctx.NewFields.Add(id);
+        ctx.AddField(id, parent);
         return id;
     }
 

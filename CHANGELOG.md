@@ -25,7 +25,8 @@ The first release candidate. Arkki is a general-purpose PDF library for .NET 10 
 - **Editing**: open a PDF and stamp over its pages, insert, remove, move and rotate pages, merge files,
   extract and split pages.
 - **Forms**: read, fill and create text fields, check boxes, radio button groups, combo boxes and list boxes
-  (single and multiple choice); fields are filled by name and get appearances that show in every viewer.
+  (single and multiple choice); fields are filled by name and get appearances that show in every viewer. A dotted
+  name ("customer.name") is written as a field tree.
 - **Links, bookmarks and attachments**: URL and in-document links, a nested outline, embedded files.
 - **Encryption**: AES-256 (revision 6) with user and owner passwords and permissions.
 - **Signing** (`Arkki.Pdf.Signing`): PAdES B-B and B-T signatures as incremental updates, RFC 3161
