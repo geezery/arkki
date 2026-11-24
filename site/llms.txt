@@ -4,7 +4,7 @@
 
 ## Why it exists
 
-The complete PDF libraries for .NET are commercial, or free only under copyleft terms, or free only below a revenue limit; the unconditionally free ones each cover only a part (drawing, or reading, or wrapping a native engine). Arkki covers layout, reading, editing, forms, encryption and PAdES signing in one library with no paid edition, no revenue or seat limit and no license key. MPL-2.0 allows use in closed-source and commercial products and only requires sharing changes made to Arkki's own source files.
+The complete PDF libraries for .NET are commercial, or free only under the AGPL (a closed-source product has to buy the commercial license), or free only below a revenue limit; what is free without conditions covers only a part (mostly reading) or wraps a native engine. The authors know of no other .NET library that does the whole job and is free without conditions. Arkki covers layout, reading, editing, forms, encryption and PAdES signing in one library with no paid edition, no revenue or seat limit and no license key. MPL-2.0 allows use in closed-source and commercial products and only requires sharing changes made to Arkki's own source files.
 
 ## Version
 

@@ -29,12 +29,13 @@ dotnet add package Arkki.Pdf.Signing --prerelease   # only for digital signature
 
 ## Why Arkki exists
 
-A .NET program that needs PDFs has had to pick between three kinds of library. The complete ones are
-commercial, or free only under copyleft terms that reach into your own program, or free only until a
-company passes a revenue limit. The ones that are free without conditions each cover a part of the job:
-one draws pages, another reads them, a third wraps a native engine or a browser that then has to be
-shipped and patched on every platform. Laying out a document, filling its form, encrypting it and signing
-it to the PAdES standard meant combining several of them, or paying.
+We know of no other PDF library for .NET that does the whole job and is free without conditions. The
+complete ones are commercial, or free only under the AGPL, which makes a closed-source product buy the
+commercial license, or free only until a company passes a revenue limit. Libraries that used to be
+permissively licensed have moved to those terms in their newer versions. What remains free without
+conditions covers a part of the job, mostly reading, or wraps a native engine or a browser that then has
+to be shipped and patched on every platform. Laying out a document, filling its form, encrypting it and
+signing it to the PAdES standard has meant paying.
 
 Arkki is one library for the whole job that is free for everyone:
 
