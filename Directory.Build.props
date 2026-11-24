@@ -7,7 +7,7 @@
     <NuGetAudit>false</NuGetAudit>
     <InvariantGlobalization>true</InvariantGlobalization>
     <Deterministic>true</Deterministic>
-    <Version>1.0.0-rc.1</Version>
+    <Version>1.0.0-rc.2</Version>
     <Authors>Arkki contributors</Authors>
     <Copyright>Arkki contributors</Copyright>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>

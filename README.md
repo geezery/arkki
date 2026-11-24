@@ -15,7 +15,7 @@ License 2.0.
 | Package | Contents |
 |---|---|
 | `Arkki.Pdf` | Writer, layout engine, TrueType/OpenType fonts, PNG/JPEG images, barcodes, reader, merging, page operations, stamping, forms, links, bookmarks, attachments, encryption |
-| `Arkki.Pdf.Signing` | PAdES digital signatures (B-B, B-T with an RFC 3161 timestamp) and their verification |
+| `Arkki.Pdf.Signing` | PAdES digital signatures from B-B to B-LTA: invisible and visible, with a local or an external key, RFC 3161 timestamps, long-term validation data, and verification with revocation checking |
 
 Requires .NET 10.
 
@@ -144,7 +144,8 @@ page.AddListBox("days", x: 50, y: 240, width: 120, height: 40, ["Mon", "Tue", "W
 foreach (PdfFormField f in PdfReader.Open(pdf).GetFormFields()) Console.WriteLine($"{f.Name} = {f.Value}");
 ```
 
-Text fields, check boxes, radio buttons, combo boxes and list boxes are read, filled and created. Radio buttons
+Text fields, check boxes, radio buttons, combo boxes and list boxes are read, filled and created; empty
+signature fields are created with `page.AddSignatureField` and signed with `Arkki.Pdf.Signing`. Radio buttons
 with the same group name form one field, on one page or several. A created field draws its own thin border, and
 a filled field gets a new appearance stream, so both show in every viewer. Field appearances use Helvetica with
 Western European characters. Not included: push buttons, JavaScript actions and calculated fields.
@@ -167,21 +168,53 @@ using Arkki.Pdf.Signing;
 X509Certificate2 cert = X509CertificateLoader.LoadPkcs12FromFile("signer.p12", password);
 byte[] signed = PdfSigner.Sign(pdf, cert, new PdfSignatureOptions { Reason = "Approved", Location = "Helsinki" });
 
-// PAdES B-T: the signature is timestamped by an RFC 3161 authority.
-byte[] stamped = await PdfSigner.SignAsync(pdf, cert, new PdfSignatureOptions
+// A visible signature: a box on the page with the signer, the time, the reason and the location.
+byte[] visible = PdfSigner.Sign(pdf, cert, new PdfSignatureOptions
 {
-    Timestamp = new HttpTimestampClient(httpClient, new Uri("https://tsa.example.com")),
+    Reason = "Approved",
+    Appearance = new PdfSignatureAppearance { X = 50, Y = 700, Width = 220, Height = 60, Border = true },
 });
 
-foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(stamped, trustedRoots))
-    Console.WriteLine($"{s.FieldName}: intact {s.IsIntact}, whole {s.CoversWholeDocument}, {s.Level}, trusted {s.ChainTrusted}");
+// PAdES B-T: the signature is timestamped by an RFC 3161 authority.
+var authority = new HttpTimestampClient(httpClient, new Uri("https://tsa.example.com"));
+byte[] stamped = await PdfSigner.SignAsync(pdf, cert, new PdfSignatureOptions { Timestamp = authority });
+
+// B-LT: the certificates' revocation information goes into the file. B-LTA: a timestamp over all of it.
+byte[] longTerm = await PdfSigner.AddValidationDataAsync(stamped, new HttpRevocationClient(httpClient), issuerCertificates);
+byte[] archived = await PdfSigner.AddDocumentTimestampAsync(longTerm, authority);
+
+foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(archived, trustedRoots))
+    Console.WriteLine($"{s.FieldName}: intact {s.IsIntact}, whole {s.CoversWholeDocument}, {s.Level}, " +
+                      $"trusted {s.ChainTrusted}, revocation {s.Revocation}");
 ```
 
-The signature is an invisible field appended as an incremental update, so earlier signatures stay valid.
-RSA and ECDSA keys, SHA-256/384/512. A viewer shows a signature as trusted when the certificate comes from a
-CA it trusts (for Adobe, the AATL or EU trusted lists); a certificate you issued yourself gives a valid but
-untrusted signature. Not included: visible signature appearances, long-term validation data (B-LT/B-LTA),
-revocation checking, and signing with an external device or service.
+A signature is appended as an incremental update, so earlier signatures stay valid. RSA and ECDSA keys,
+SHA-256/384/512.
+
+- **Visible signatures.** `PdfSignatureAppearance` draws the signature on its page: the default description
+  or your own text, an image (a scanned signature, a stamp, a logo), a border, an embedded font for text
+  Helvetica cannot write (`Font`), or anything at all through `Draw`, which hands you a canvas.
+- **Signature fields.** `page.AddSignatureField("approval", x, y, width, height)` marks where a signature
+  goes. `FieldName = "approval"` then signs that field, also in a form another program made, and draws
+  the signature in its box.
+- **Certification.** `Certification = PdfCertificationLevel.FormFilling` makes the first signature the
+  author's, and says which later changes keep the document valid.
+- **Keys held elsewhere.** A smart card, an HSM, a cloud key vault or a signing service implements
+  `IExternalSigner`: Arkki builds the signature and asks only for the signature of one hash.
+  `PdfSigner.SignAsync(pdf, externalSigner, options)`.
+- **Long-term validation.** `AddValidationDataAsync` fetches the OCSP responses or revocation lists of
+  every certificate the signatures and timestamps rely on (`HttpRevocationClient` reads the addresses from
+  the certificates) and stores them in the file (B-LT). `AddDocumentTimestampAsync` timestamps the whole
+  file (B-LTA); repeat it before the authority's certificate expires to keep the file valid.
+- **Verification.** `PdfSignatureVerifier` checks integrity, coverage, the PAdES level (B-B to B-LTA), the
+  timestamp, the chain to your roots, and revocation with the information in the file. `VerifyAsync`
+  fetches what the file lacks. Document timestamps are reported next to the signatures.
+
+A viewer shows a signature as trusted when the certificate comes from a CA it trusts (for Adobe, the AATL
+or EU trusted lists); a certificate you issued yourself gives a valid but untrusted signature. Not
+included: RSA-PSS with external signers, signature policies, judging how fresh revocation information is,
+locking fields with a signature, checking that changes after a certification stay within what it allows,
+and signing encrypted files.
 
 ## Platforms and threads
 

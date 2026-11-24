@@ -9,8 +9,10 @@ exactly what it does, what it does not do, and how to check both.
   memory it should not: the worst it gets is an exception.
 - **No files, no network, no processes.** The library works on the bytes and streams you hand it.
   `Arkki.Pdf` never opens a file, a socket or a process by itself, and it never looks for system fonts.
-  The one network call in the project is `HttpTimestampClient` in `Arkki.Pdf.Signing`, which posts a
-  timestamp request to the authority *you* give it, with the `HttpClient` *you* give it.
+  The only network calls in the project are in `Arkki.Pdf.Signing`, and only when you ask for them:
+  `HttpTimestampClient` posts a timestamp request to the authority *you* give it, and `HttpRevocationClient`
+  asks the OCSP responders and revocation list addresses named in the certificates being checked. Both use the
+  `HttpClient` *you* give them, so timeouts, proxies and which hosts may be reached stay yours to decide.
 - **No dependencies in the core.** `Arkki.Pdf` references nothing but .NET. `Arkki.Pdf.Signing` adds
   Microsoft's `System.Security.Cryptography.Pkcs` and nothing else.
 - **No telemetry.** Nothing is collected, logged or sent.
@@ -38,9 +40,21 @@ password is strong, and permissions (print, copy) are a request to the viewer, n
 
 `PdfSignatureVerifier` reports whether the signed bytes are intact, whether the signature covers the
 whole file, its PAdES level, its timestamp and whether the certificate chains to the roots you pass.
-It does **not** check revocation (OCSP or CRL), and Arkki does not write long-term validation data
-(B-LT, B-LTA). Check revocation yourself where it matters. Keep signing keys out of source control;
-the tests make their own throw-away certificates.
+It checks revocation with the OCSP responses and revocation lists the file carries, and `VerifyAsync`
+fetches what is missing when you give it a client. A list or response counts only when the certificate's
+issuer (or a responder the issuer delegated) signed it. What the verifier does **not** judge: how fresh
+revocation information is, certificate policies, and whether changes made after a certification signature
+stay within what it allows. A certificate revoked after a time that a valid timestamp proves is reported
+as good, because the signature was made while it was; without a timestamp the claimed time proves nothing,
+so a later revocation counts.
+
+A visible signature's picture is only a picture: anyone can draw one. Trust what the verifier (or a
+viewer's signature panel) says, never the box on the page.
+
+Addresses in a certificate are data from whoever made the file. `HttpRevocationClient` follows only
+`http` and `https` addresses, but on a server that verifies files from strangers, give it an `HttpClient`
+that cannot reach your internal network. Keep signing keys out of source control; the tests make their own
+throw-away certificates.
 
 ## Check it yourself
 

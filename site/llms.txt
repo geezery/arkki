@@ -10,7 +10,7 @@
 ## Packages
 
 - `Arkki.Pdf`: writer, layout engine, TrueType/OpenType fonts, PNG/JPEG images, barcodes, reader, merging, page operations, stamping, forms, links, bookmarks, attachments, encryption. No dependencies.
-- `Arkki.Pdf.Signing`: PAdES digital signatures (B-B, and B-T with an RFC 3161 timestamp) and their verification. Depends only on Microsoft's `System.Security.Cryptography.Pkcs`.
+- `Arkki.Pdf.Signing`: PAdES digital signatures from B-B to B-LTA, visible or invisible, with a local or an external key, and their verification with revocation checking. Depends only on Microsoft's `System.Security.Cryptography.Pkcs`.
 
 Install: `dotnet add package Arkki.Pdf --prerelease`
 
@@ -25,7 +25,9 @@ Install: `dotnet add package Arkki.Pdf --prerelease`
 - Editing: `PdfDocument.Open` then stamp over pages, insert, remove, move and rotate pages, add bookmarks and attachments; `PdfDocument.Merge` and `PdfDocument.ExtractPages`.
 - Forms: text fields, check boxes, radio buttons, combo boxes and list boxes. Fields of existing forms are filled by name, new fields are created on pages, and the fields of any file can be read. Filled fields get appearance streams, so they show in every viewer.
 - Encryption: writes AES-256 (PDF 2.0, revision 6) with user and owner passwords and permissions.
-- Signatures: an invisible signature field appended as an incremental update, so earlier signatures stay valid. RSA and ECDSA keys, SHA-256/384/512. The verifier reports integrity, coverage, PAdES level, timestamp and certificate chain trust.
+- Signatures: `PdfSigner` appends each signature as an incremental update, so earlier signatures stay valid. RSA and ECDSA keys, SHA-256/384/512. A signature is invisible, or drawn on its page with `PdfSignatureOptions.Appearance` (`PdfSignatureAppearance`: a box in points from the page's top-left corner, default or custom text, an embedded font, a PNG or JPEG image, a border, or a drawing callback). It goes into a new field or into an empty signature field the document already has (`PdfPage.AddSignatureField`, signed by `FieldName`). Certification signatures (`PdfCertificationLevel`) must be the document's first signature. The key can be held outside the process through `IExternalSigner` (RSA PKCS #1 v1.5, or ECDSA as r and s side by side or as a DER sequence). `Timestamp` makes the signature PAdES B-T.
+- Long-term signatures: `PdfSigner.AddValidationDataAsync` stores certificates, OCSP responses and revocation lists in the file's document security store (B-LT); `HttpRevocationClient` fetches them from the addresses in the certificates, or implement `IRevocationClient`. `PdfSigner.AddDocumentTimestampAsync` adds a document timestamp over the whole file (B-LTA).
+- Verification: `PdfSignatureVerifier.Verify` checks with the file's own data and fetches nothing; `VerifyAsync` with `PdfVerificationOptions.Revocation` fetches revocation information the file lacks. It reports integrity, coverage, PAdES level (B-B, B-T, B-LT, B-LTA), timestamp, revocation (NotChecked, Good, Revoked, Unknown), certificate chain trust, visibility, certification level and document timestamps.
 - Output is deterministic: the same input gives the same bytes.
 - Threads: fonts and images are immutable and can be shared; a `PdfDocument` or `PdfReader` is used by one thread at a time.
 
@@ -35,7 +37,7 @@ Install: `dotnet add package Arkki.Pdf --prerelease`
 - Right-to-left and complex-script shaping (Arabic, Indic)
 - Rendering pages to images, SVG
 - CFF font subsetting
-- Visible signature appearances, long-term validation data (PAdES B-LT/B-LTA), revocation checking, signing with an external device or service
+- In signing: signature policies (PAdES-EPES) and certificate policy checks, RSA-PSS from an external signer, judging the freshness of revocation information, VRI dictionaries, locking fields with a signature (FieldMDP), signing encrypted PDFs, checking that changes after a certification stay within what it allows
 - Hyphenation dictionaries
 
 ## Performance

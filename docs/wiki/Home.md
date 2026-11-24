@@ -23,7 +23,7 @@ Arkki is Finnish for a sheet of paper.
 | [[Layout]] | Text, lists, tables, rows and columns that flow over pages |
 | [[Forms]] | Read, fill and create text fields, check boxes, radio buttons, combo and list boxes |
 | [[Editing and Merging]] | Open a file, stamp it, move its pages, merge, bookmark, attach |
-| [[Encryption and Signing]] | AES-256 passwords and PAdES digital signatures |
+| [[Encryption and Signing]] | AES-256 passwords and PAdES digital signatures: visible, timestamped, long-term |
 | [[Fonts Images Barcodes]] | What goes on the page besides text |
 | [[Troubleshooting]] | Exceptions and what they mean, threads, missing letters |
 | [[FAQ]] | Licence, platforms, what is not included |
@@ -33,7 +33,7 @@ Arkki is Finnish for a sheet of paper.
 | Package | Contents |
 |---|---|
 | `Arkki.Pdf` | Writer, layout engine, TrueType/OpenType fonts, PNG/JPEG images, barcodes, reader, merging, page operations, stamping, forms, links, bookmarks, attachments, encryption |
-| `Arkki.Pdf.Signing` | PAdES digital signatures (B-B, B-T with an RFC 3161 timestamp) and their verification |
+| `Arkki.Pdf.Signing` | PAdES digital signatures from B-B to B-LTA, visible or invisible, with a local or an external key, and their verification with revocation checking |
 
 Both require .NET 10.
 

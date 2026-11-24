@@ -302,7 +302,7 @@ footer .right{margin-left:auto}
       <li>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6zM9 12l2.2 2.2L15 10"/></svg>
         <h3>PAdES signatures</h3>
-        <p>The <code>Arkki.Pdf.Signing</code> package signs at PAdES B-B and B-T (with an RFC 3161 timestamp) as an incremental update, so earlier signatures stay valid, and verifies integrity, coverage and the certificate chain.</p>
+        <p>The <code>Arkki.Pdf.Signing</code> package signs from PAdES B-B to B-LTA: invisible or drawn on the page, timestamped, with validation data and document timestamps for the long term. Each step is an incremental update, so earlier signatures stay valid. The verifier checks integrity, coverage, revocation and the certificate chain.</p>
       </li>
       <li>
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="5" width="2" height="14"/><rect x="7" y="5" width="1" height="14"/><rect x="10" y="5" width="3" height="14"/><rect x="15" y="5" width="1" height="14"/><rect x="18" y="5" width="3" height="14"/></svg>
@@ -423,7 +423,10 @@ foreach (PdfFormField f in PdfReader.Open(pdf).GetFormFields())
         <p>Encryption is one property. Signing lives in its own package, which adds only Microsoft's <code>System.Security.Cryptography.Pkcs</code>.</p>
         <ul>
           <li>RSA and ECDSA keys, SHA-256/384/512</li>
-          <li>The verifier reports integrity, coverage, level and chain trust</li>
+          <li>Visible signatures with text, a picture and your own font, in a new box or an existing signature field</li>
+          <li>Keys on a smart card, in an HSM or with a signing service through <code>IExternalSigner</code></li>
+          <li>Certification signatures, timestamps, and long-term validation data (B-LT, B-LTA)</li>
+          <li>The verifier reports integrity, coverage, level, revocation and chain trust</li>
         </ul>
       </div>
 <pre tabindex="0" aria-label="C# sample: encryption and signatures"><code>doc.Encryption = new PdfEncryption(userPassword: "open", ownerPassword: "owner",
@@ -433,14 +436,22 @@ X509Certificate2 cert = X509CertificateLoader.LoadPkcs12FromFile("signer.p12", p
 byte[] signed = PdfSigner.Sign(pdf, cert,
     new PdfSignatureOptions { Reason = "Approved", Location = "Helsinki" });
 
-// PAdES B-T: the signature is timestamped by an RFC 3161 authority.
+// Visible and timestamped (PAdES B-T): drawn on the page, with the time proved
+// by an RFC 3161 authority.
+var authority = new HttpTimestampClient(httpClient, new Uri("https://tsa.example.com"));
 byte[] stamped = await PdfSigner.SignAsync(pdf, cert, new PdfSignatureOptions
 {
-    Timestamp = new HttpTimestampClient(httpClient, new Uri("https://tsa.example.com")),
+    Appearance = new PdfSignatureAppearance { X = 50, Y = 700, Width = 220, Height = 60 },
+    Timestamp = authority,
 });
 
-foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(stamped, trustedRoots))
-    Console.WriteLine($"{s.FieldName}: intact {s.IsIntact}, {s.Level}, trusted {s.ChainTrusted}");</code></pre>
+// Long-term: revocation data in the file (B-LT), then a document timestamp (B-LTA).
+byte[] longTerm = await PdfSigner.AddValidationDataAsync(stamped,
+    new HttpRevocationClient(httpClient), issuers);
+byte[] archived = await PdfSigner.AddDocumentTimestampAsync(longTerm, authority);
+
+foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(archived, trustedRoots))
+    Console.WriteLine($"{s.FieldName}: intact {s.IsIntact}, {s.Level}, {s.Revocation}, trusted {s.ChainTrusted}");</code></pre>
     </div>
   </section>
 
@@ -473,7 +484,7 @@ foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(stamped, trustedRoots
         </tr>
         <tr>
           <td><a href="https://www.nuget.org/packages/Arkki.Pdf.Signing">Arkki.Pdf.Signing</a></td>
-          <td>PAdES digital signatures (B-B, and B-T with an RFC 3161 timestamp) and their verification</td>
+          <td>PAdES digital signatures from B-B to B-LTA, visible or invisible, with a local or an external key, and their verification with revocation checking</td>
           <td><code>System.Security.Cryptography.Pkcs</code></td>
         </tr>
       </table>
@@ -492,9 +503,9 @@ foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(stamped, trustedRoots
       <li>Rendering pages to images</li>
       <li>SVG</li>
       <li>CFF font subsetting (CFF fonts are embedded whole)</li>
-      <li>Visible signature appearances</li>
-      <li>Long-term validation data (PAdES B-LT, B-LTA) and revocation checking</li>
-      <li>Signing with an external device or service</li>
+      <li>Signature policies (PAdES-EPES) and checks of certificate policies</li>
+      <li>RSA-PSS signatures from an external signer</li>
+      <li>Signing encrypted PDFs, and locking fields with a signature</li>
       <li>Hyphenation dictionaries (plug in your own with <code>IHyphenator</code>)</li>
     </ul>
   </section>

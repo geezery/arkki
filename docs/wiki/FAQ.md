@@ -51,9 +51,15 @@ elements; see [[Layout]].
 **What is not included?**
 Tagged PDF / PDF/UA, PDF/A, right-to-left and complex-script shaping (Arabic,
 Indic), rendering pages to images, SVG, and CFF font subsetting. In forms: push
-buttons, JavaScript actions and calculated fields. In signing: visible
-signature appearances, long-term validation data (B-LT/B-LTA), revocation
-checking, and signing with an external device or service.
+buttons, JavaScript actions and calculated fields. In signing: RSA-PSS with an
+external signer, signature policies, locking fields with a signature, and
+signing encrypted PDFs; the full list is on [[Encryption and Signing]].
+
+**Can a signature be visible, long-term, or made with a key on a device?**
+Yes to all three. A signature can be drawn on its page with text, a picture
+and your own font; a signed file can be taken to PAdES B-LT and B-LTA with
+validation data and document timestamps; and the key can stay on a smart card,
+in an HSM or with a signing service. See [[Encryption and Signing]].
 
 **Which form fields can it handle?**
 Text fields, check boxes, radio buttons, combo boxes and list boxes are read,

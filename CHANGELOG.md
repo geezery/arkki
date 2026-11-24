@@ -3,6 +3,39 @@
 All notable changes to Arkki. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [semantic versioning](https://semver.org/).
 
+## [1.0.0-rc.2] - 2026-11-24
+
+Signatures grow from the baseline to the whole of PAdES: visible, long-term, and with keys held elsewhere.
+
+### Added
+
+- **Visible signatures**: `PdfSignatureOptions.Appearance` draws the signature on its page with a default
+  description or your own text, an image, a border, an embedded font, or a canvas to draw on.
+- **Signature fields**: `PdfPage.AddSignatureField` creates an empty signature field, and `PdfSigner` signs
+  an existing empty field by its name, in Arkki's own forms and in other programs'.
+- **Certification signatures**: `PdfSignatureOptions.Certification` (DocMDP) with the three permission levels.
+- **External keys**: `IExternalSigner` and `PdfSigner.SignAsync(pdf, signer, …)` for smart cards, HSMs, key
+  vaults and signing services; RSA (PKCS #1 v1.5) and ECDSA.
+- **Long-term validation**: `PdfSigner.AddValidationDataAsync` stores certificates, OCSP responses and
+  revocation lists in the document security store (PAdES B-LT), fetched through `IRevocationClient` /
+  `HttpRevocationClient`; `PdfSigner.AddDocumentTimestampAsync` adds a document timestamp (B-LTA).
+- **Verification**: revocation checking with the file's own data and, with `PdfSignatureVerifier.VerifyAsync`,
+  fetched data; the levels `BaselineLT` and `BaselineLTA`; document timestamps; `IsVisible`,
+  `Certification`, `IsDocumentTimestamp` and `Revocation` on `PdfSignatureInfo`.
+
+### Changed
+
+- `PdfSignatureOptions.FieldName` naming an existing empty signature field now signs that field; before, any
+  existing field of the name was an error. A field of another kind, or one already signed, still is.
+- `PdfSignatureVerifier.Verify` lists document timestamps too (`IsDocumentTimestamp`), and reports a
+  signature whose certificate was revoked in `Revocation` and `Problem`.
+
+### Known limits
+
+- Not included in signing: RSA-PSS with external signers, signature policies, judging the freshness of
+  revocation information, locking fields with a signature (FieldMDP), checking that changes after a
+  certification stay within what it allows, and signing encrypted files.
+
 ## [1.0.0-rc.1] - 2026-11-24
 
 The first release candidate. Arkki is a general-purpose PDF library for .NET 10 in pure managed code.
@@ -47,4 +80,5 @@ The first release candidate. Arkki is a general-purpose PDF library for .NET 10 
   revocation checking, and signing with external devices or services.
 - A `PdfDocument` or `PdfReader` is used by one thread at a time; fonts and images can be shared.
 
+[1.0.0-rc.2]: https://github.com/geezery/arkki/releases/tag/v1.0.0-rc.2
 [1.0.0-rc.1]: https://github.com/geezery/arkki/releases/tag/v1.0.0-rc.1

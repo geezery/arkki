@@ -122,7 +122,33 @@ untrusted signature.
 
 **Signing a second time throws.**
 The field name `Signature1` is taken by the first signature. Set
-`PdfSignatureOptions.FieldName` to another name.
+`PdfSignatureOptions.FieldName` to another name, or to the name of an empty
+signature field the document has.
+
+**A visible signature throws "needs a box".**
+A new signature field has no size of its own: give the appearance a `Width`
+and a `Height`. Only an existing signature field brings its own box.
+
+**The text of a visible signature shows `?`.**
+Without a font the text is drawn in Helvetica, which covers Western European
+characters only. Set `PdfSignatureAppearance.Font` to a font file that has the
+characters.
+
+**The external signer is refused.**
+"Not its certificate's signature of the hash" means the value does not verify
+with the certificate: the key belongs to another certificate, or an RSA key
+signed with other padding than PKCS #1 v1.5.
+
+**Adding validation data throws.**
+The message names the certificate. Either its issuer's certificate is not in
+the file (pass intermediates and roots in `certificates`), or neither an OCSP
+response nor a revocation list could be had for it.
+
+**`Revocation` is `NotChecked` or `Unknown`.**
+`NotChecked`: the file carries no revocation information; use `VerifyAsync`
+with a revocation client, or add validation data to the file. `Unknown`: no
+answer was found for some certificate, or the chain does not reach a root; pass
+the missing issuer certificates.
 
 ## Still stuck
 

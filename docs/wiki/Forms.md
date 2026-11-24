@@ -172,5 +172,8 @@ page.AddTextField("email", x: 50, y: 100, width: 200, height: 18);
   show as `?` in the appearance Arkki draws. See [[Troubleshooting]].
 - **Radio button values are plain ASCII names**, as above.
 - **Not included:** push buttons, JavaScript actions and calculated fields.
-  Push buttons and signature fields are read (their `Kind` says so) but have
-  no value to set.
+  Push buttons are read (their `Kind` says so) but have no value to set.
+- **Signature fields** are read, and an empty one is created with
+  `page.AddSignatureField(name, x, y, width, height)`: a framed box that marks
+  where a signature goes. It has no value to set; it is signed by its name with
+  the Arkki.Pdf.Signing package. See [[Encryption and Signing]].
