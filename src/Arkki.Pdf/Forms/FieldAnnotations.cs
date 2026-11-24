@@ -10,7 +10,7 @@ internal sealed class TextFieldAnnotation(PdfPage page, string name, double x, d
 
     public override int Write(SaveContext ctx, int pageId)
     {
-        int ap = FieldAppearance.Text(ctx, Width, Height, Value, fontSize, multiline, border: true);
+        int ap = FieldAppearance.Text(ctx, Width, Height, Value, fontSize, multiline, FieldFrame.Created);
         int flags = (readOnly ? 1 : 0) | (multiline ? 1 << 12 : 0);
         var b = new ByteBuf(256);
         var (parent, partial) = ctx.FieldPlace(Name);
@@ -38,7 +38,7 @@ internal sealed class CheckBoxAnnotation(PdfPage page, string name, double x, do
 
     public override int Write(SaveContext ctx, int pageId)
     {
-        int on = FieldAppearance.Check(ctx, Width, Height, true, border: true), off = FieldAppearance.Check(ctx, Width, Height, false, border: true);
+        int on = FieldAppearance.Check(ctx, Width, Height, true, FieldFrame.Created), off = FieldAppearance.Check(ctx, Width, Height, false, FieldFrame.Created);
         string state = Checked ? "Yes" : "Off";
         var b = new ByteBuf(256);
         var (parent, partial) = ctx.FieldPlace(Name);
@@ -115,8 +115,8 @@ internal sealed class ChoiceFieldAnnotation(PdfPage page, string name, double x,
     {
         var indices = Selected.Select(s => IndexOf(options, s)).Where(i => i >= 0).Order().ToList();
         int ap = combo
-            ? FieldAppearance.Text(ctx, Width, Height, Selected.FirstOrDefault() ?? "", fontSize, multiline: false, border: true)
-            : FieldAppearance.List(ctx, Width, Height, options, indices, fontSize, border: true);
+            ? FieldAppearance.Text(ctx, Width, Height, Selected.FirstOrDefault() ?? "", fontSize, multiline: false, FieldFrame.Created)
+            : FieldAppearance.List(ctx, Width, Height, options, indices, fontSize, FieldFrame.Created);
         // Combo is bit 18, Edit bit 19, MultiSelect bit 22.
         int flags = (readOnly ? 1 : 0) | (combo ? 1 << 17 : 0) | (combo && editable ? 1 << 18 : 0) | (multiSelect ? 1 << 21 : 0);
         var b = new ByteBuf(256 + options.Count * 24);

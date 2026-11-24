@@ -27,8 +27,37 @@ internal static class WinAnsi
 }
 
 /// <summary>
+/// The box a field's appearance draws around its value: a background and a border, each a colour as the numbers of a
+/// PDF colour operator (one for grey, three for RGB, four for CMYK) or null for none.
+/// </summary>
+internal sealed record FieldFrame(string? Border, string? Background, double Width = 1, bool Underline = false)
+{
+    /// <summary>The frame of fields created in this document: a thin grey border, as their /MK /BC says.</summary>
+    public static readonly FieldFrame Created = new(FieldAppearance.BorderColor, null);
+
+    /// <summary>The operators that paint the frame into a box of this size.</summary>
+    public void Write(ByteBuf c, double width, double height)
+    {
+        if (Background is not null)
+            c.Ascii("q ").Ascii(Background).Sp().Ascii(Operator(Background, fill: true)).Ascii(" 0 0 ").Num(width).Sp().Num(height).Ascii(" re f Q ");
+        if (Border is null || Width <= 0) return;
+        double half = Width / 2;
+        c.Ascii("q ").Ascii(Border).Sp().Ascii(Operator(Border, fill: false)).Sp().Num(Width).Ascii(" w ");
+        if (Underline) c.Num(0).Sp().Num(half).Ascii(" m ").Num(width).Sp().Num(half).Ascii(" l S Q ");
+        else c.Num(half).Sp().Num(half).Sp().Num(Math.Max(0, width - Width)).Sp().Num(Math.Max(0, height - Width)).Ascii(" re S Q ");
+    }
+
+    private static string Operator(string color, bool fill) => color.Count(ch => ch == ' ') switch
+    {
+        0 => fill ? "g" : "G",
+        2 => fill ? "rg" : "RG",
+        _ => fill ? "k" : "K",
+    };
+}
+
+/// <summary>
 /// Appearance streams for form fields, shared by new fields and filled imported ones. A field created in this document
-/// gets a thin grey border; an imported one keeps whatever its page draws around it.
+/// gets a thin grey border; a filled imported one is redrawn with the border and background its widget asks for.
 /// </summary>
 internal static class FieldAppearance
 {
@@ -36,11 +65,11 @@ internal static class FieldAppearance
     public const string BorderColor = "0.6 0.6 0.6";
 
     /// <summary>Writes the appearance of a text field or combo box showing <paramref name="value"/> and returns its object number.</summary>
-    public static int Text(SaveContext ctx, double width, double height, string value, double fontSize, bool multiline, bool border = false)
+    public static int Text(SaveContext ctx, double width, double height, string value, double fontSize, bool multiline, FieldFrame? frame = null)
     {
         double size = fontSize > 0 ? fontSize : Math.Clamp(height * 0.6, 4, 12);
         var c = new ByteBuf(128);
-        if (border) Border(c, width, height);
+        frame?.Write(c, width, height);
         c.Ascii("/Tx BMC q 1 1 ").Num(Math.Max(0, width - 2)).Sp().Num(Math.Max(0, height - 2)).Ascii(" re W n BT /Helv ").Num(size).Ascii(" Tf 0 g ");
         string[] lines = multiline ? value.Replace("\r\n", "\n").Split('\n') : [value.Replace("\r", " ").Replace("\n", " ")];
         double leading = size * 1.15;
@@ -61,12 +90,12 @@ internal static class FieldAppearance
     /// Options that do not fit are clipped; a viewer scrolls them when the reader uses the field.
     /// </summary>
     public static int List(SaveContext ctx, double width, double height, IReadOnlyList<string> options, IReadOnlyCollection<int> selected,
-        double fontSize, bool border = false)
+        double fontSize, FieldFrame? frame = null)
     {
         double size = fontSize > 0 ? fontSize : 10;
         double leading = size * 1.25;
         var c = new ByteBuf(256);
-        if (border) Border(c, width, height);
+        frame?.Write(c, width, height);
         c.Ascii("/Tx BMC q 1 1 ").Num(Math.Max(0, width - 2)).Sp().Num(Math.Max(0, height - 2)).Ascii(" re W n ");
         int visible = Math.Min(options.Count, (int)Math.Ceiling(Math.Max(0, height - 2) / leading));
         for (int i = 0; i < visible; i++)
@@ -88,10 +117,10 @@ internal static class FieldAppearance
     }
 
     /// <summary>Writes the "on" (a tick) or "off" (empty) appearance of a check box.</summary>
-    public static int Check(SaveContext ctx, double width, double height, bool on, bool border = false)
+    public static int Check(SaveContext ctx, double width, double height, bool on, FieldFrame? frame = null)
     {
         var c = new ByteBuf(96);
-        if (border) Border(c, width, height);
+        frame?.Write(c, width, height);
         if (on)
         {
             double size = Math.Min(width, height) * 0.8;
@@ -114,9 +143,6 @@ internal static class FieldAppearance
         }
         return Form(ctx, width, height, c, "");
     }
-
-    private static void Border(ByteBuf c, double width, double height) =>
-        c.Ascii("q ").Ascii(BorderColor).Ascii(" RG 1 w 0.5 0.5 ").Num(Math.Max(0, width - 1)).Sp().Num(Math.Max(0, height - 1)).Ascii(" re S Q ");
 
     /// <summary>A circle as four Bézier curves, counter-clockwise from its rightmost point.</summary>
     private static ByteBuf Circle(ByteBuf c, double cx, double cy, double r)

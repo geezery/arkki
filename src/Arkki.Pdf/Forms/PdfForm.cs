@@ -257,14 +257,47 @@ public sealed class PdfForm
                 {
                     double[] rect = r.ReadRect(widget.Get("Rect")) ?? [0, 0, 0, 0];
                     double width = Math.Abs(rect[2] - rect[0]), height = Math.Abs(rect[3] - rect[1]);
+                    FieldFrame? frame = Frame(r, widget);
                     int ap = choice && !f.IsComboBox
-                        ? FieldAppearance.List(ctx, width, height, f.Options, chosen, f.FontSize)
-                        : FieldAppearance.Text(ctx, width, height, Shown(f), f.FontSize, f.Multiline);
+                        ? FieldAppearance.List(ctx, width, height, f.Options, chosen, f.FontSize, frame)
+                        : FieldAppearance.Text(ctx, width, height, Shown(f), f.FontSize, f.Multiline, frame);
                     overrides[(r, w)] = With(widget, ("AP", new PdfDict([new("N", new PdfOutputRef(ap))])));
                 }
             }
         }
         return overrides;
+    }
+
+    /// <summary>
+    /// The border and background a widget asks for in its /MK (appearance characteristics) and /BS (border style), so a
+    /// refilled field keeps its box; null when it asks for neither.
+    /// </summary>
+    private static FieldFrame? Frame(PdfReader r, PdfDict widget)
+    {
+        if (r.Resolve(widget.Get("MK")) is not PdfDict mk) return null;
+        string? border = Color(r, mk.Get("BC")), background = Color(r, mk.Get("BG"));
+        if (border is null && background is null) return null;
+        double width = 1;
+        bool underline = false;
+        if (r.Resolve(widget.Get("BS")) is PdfDict bs)
+        {
+            if (r.Resolve(bs.Get("W")) is PdfNumber w) width = Math.Clamp(w.Value, 0, 12);
+            underline = r.Resolve(bs.Get("S")) is PdfName { Encoded: "U" };
+        }
+        return new FieldFrame(border, background, width, underline);
+    }
+
+    /// <summary>A colour array of one, three or four numbers between 0 and 1 as operands; null for anything else.</summary>
+    private static string? Color(PdfReader r, PdfValue? value)
+    {
+        if (r.Resolve(value) is not PdfArray a || a.Items.Count is not (1 or 3 or 4)) return null;
+        var parts = new List<string>(4);
+        foreach (PdfValue item in a.Items)
+        {
+            if (r.Resolve(item) is not PdfNumber n) return null;
+            parts.Add(Math.Clamp(n.Value, 0, 1).ToString("0.###", System.Globalization.CultureInfo.InvariantCulture));
+        }
+        return string.Join(' ', parts);
     }
 
     private static PdfValue Str(string s) => new PdfString(PdfSerializer.TextBytes(s), hex: true);

@@ -107,6 +107,7 @@ internal static class FormChoiceTests
         Equal("filled multi-select list", "Express", string.Join(",", after["extras"].Values));
         string filledRaw = Encoding.Latin1.GetString(filled);
         Check("the filled combo box shows its value", filledRaw.Contains("(Norge) Tj"));
+        Equal("refilled fields keep their border", 4, Count(filledRaw, "0.6 0.6 0.6 RG 1 w 0.5 0.5 "));
         Equal("the chosen button changed", 1, Count(filledRaw, "/AS /courier"));
         string? filledText = External.PopplerText(filled);
         if (filledText is not null) Check("filled choices show on the page", filledText.Contains("Norge") && filledText.Contains("Dr"), filledText);
@@ -195,7 +196,8 @@ internal static class FormChoiceTests
             "<< /FT /Btn /Ff 49152 /T (plan) /V /basic /Kids [6 0 R 7 0 R] >>",
             "<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [20 260 32 272] /AS /basic /AP << /N << /basic 4 0 R /Off 4 0 R >> >> >>",
             "<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [20 240 32 252] /AS /Off /AP << /N << /pro 4 0 R /Off 4 0 R >> >> >>",
-            "<< /Type /Annot /Subtype /Widget /FT /Ch /Ff 131072 /T (lang) /Opt [[(fi) (Suomi)] [(sv) (Svenska)]] /V (fi) /DA (/Helv 9 Tf 0 g) /Rect [20 200 140 216] >>",
+            "<< /Type /Annot /Subtype /Widget /FT /Ch /Ff 131072 /T (lang) /Opt [[(fi) (Suomi)] [(sv) (Svenska)]] /V (fi) /DA (/Helv 9 Tf 0 g) /Rect [20 200 140 216]"
+                + " /MK << /BC [0 0 1] /BG [0.9] >> /BS << /W 2 >> >>",
             "<< /Type /Annot /Subtype /Widget /FT /Ch /Ff 2097152 /T (days) /Opt [(Mon) (Tue) (Wed)] /V [(Mon) (Wed)] /I [0 2] /Rect [20 120 140 180] >>");
         External.QpdfClean("hand-made form", pdf);
 
@@ -220,6 +222,9 @@ internal static class FormChoiceTests
         Equal("foreign list filled", "Tue", string.Join(",", after["days"].Values));
         string raw = Encoding.Latin1.GetString(filled);
         Check("the combo box shows the visible text", raw.Contains("(Svenska) Tj"));
+        Check("a refilled field is drawn with its widget's background", raw.Contains("0.9 g 0 0 120 16 re f"));
+        Check("a refilled field is drawn with its widget's border", raw.Contains("0 0 1 RG 2 w 1 1 118 14 re S"));
+        Check("a widget that asks for no box gets none", Count(raw, " re S") == 1);
         Check("the list shows its options", raw.Contains("(Tue) Tj"));
         Check("the old chosen rows are replaced", !raw.Contains("/I [0 2]"));
         string? py = External.PyPdf(filled, "f = pypdf.PdfReader(sys.argv[1]).get_fields()\nprint(f['plan'].get('/V'), f['lang'].get('/V'), f['days'].get('/V'))");
