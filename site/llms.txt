@@ -1,0 +1,56 @@
+# Arkki
+
+> Arkki is an open-source PDF library for .NET 10, written in C# as pure managed code. It creates documents with a paginating layout engine, opens and edits existing PDFs, fills and creates forms, encrypts with AES-256 and signs with PAdES. The core package has no dependencies and no native binaries, and runs the same on Windows, Linux and macOS. License: MPL-2.0.
+
+## Version
+
+- Current release: 1.0.0-rc.1 (the first release candidate), 2026-11-24
+- Requires .NET 10
+
+## Packages
+
+- `Arkki.Pdf`: writer, layout engine, TrueType/OpenType fonts, PNG/JPEG images, barcodes, reader, merging, page operations, stamping, forms, links, bookmarks, attachments, encryption. No dependencies.
+- `Arkki.Pdf.Signing`: PAdES digital signatures (B-B, and B-T with an RFC 3161 timestamp) and their verification. Depends only on Microsoft's `System.Security.Cryptography.Pkcs`.
+
+Install: `dotnet add package Arkki.Pdf --prerelease`
+
+## What it does
+
+- Layout: a tree of elements (`FlowDocument`, `Column`, `Row`, `Box`, `TextBlock`, `ListBlock`, `Table`) flows onto as many pages as it needs. Mixed-style paragraphs; left, right, centred and justified text; soft hyphens and a pluggable `IHyphenator`; bulleted, numbered and lettered lists; tables with headers repeated on each page, column spans, cell fills and borders; `KeepTogether`, `KeepWithNext`, `PageBreak`; headers and footers with page numbers.
+- Canvas: `PdfPage.Canvas` draws text, rotated text, opacity, images and barcodes at exact positions.
+- Fonts: TrueType fonts are embedded as subsets; OpenType CFF fonts are embedded whole. Fonts are loaded from bytes; Arkki never looks for system fonts.
+- Images: PNG (transparency as a soft mask) and JPEG, stored in the cheapest lossless form and once per document.
+- Barcodes: Code 128, EAN-13 and QR code as vectors; others plug in through `IBarcodeSymbology`.
+- Reading: `PdfReader` handles cross-reference tables and streams, object streams, incremental updates, damaged cross-references (rebuilt by scanning) and encrypted files (RC4 40/128-bit, AES-128, AES-256). It extracts text and reads metadata and form fields.
+- Editing: `PdfDocument.Open` then stamp over pages, insert, remove, move and rotate pages, add bookmarks and attachments; `PdfDocument.Merge` and `PdfDocument.ExtractPages`.
+- Forms: text fields, check boxes, radio buttons, combo boxes and list boxes. Fields of existing forms are filled by name, new fields are created on pages, and the fields of any file can be read. Filled fields get appearance streams, so they show in every viewer.
+- Encryption: writes AES-256 (PDF 2.0, revision 6) with user and owner passwords and permissions.
+- Signatures: an invisible signature field appended as an incremental update, so earlier signatures stay valid. RSA and ECDSA keys, SHA-256/384/512. The verifier reports integrity, coverage, PAdES level, timestamp and certificate chain trust.
+- Output is deterministic: the same input gives the same bytes.
+- Threads: fonts and images are immutable and can be shared; a `PdfDocument` or `PdfReader` is used by one thread at a time.
+
+## Not included
+
+- Tagged PDF / PDF/UA, PDF/A
+- Right-to-left and complex-script shaping (Arabic, Indic)
+- Rendering pages to images, SVG
+- CFF font subsetting
+- Visible signature appearances, long-term validation data (PAdES B-LT/B-LTA), revocation checking, signing with an external device or service
+- Hyphenation dictionaries
+
+## Performance
+
+- A 50 000-row table lays out to 1 021 pages in about 1.2 s and 1.5 MB on a two-core cloud VM.
+- A three-page sample invoice renders in about 5 ms at roughly 100 kB including the logo and two subset fonts.
+
+## Errors
+
+Bad arguments fail with `ArgumentException` and its kin. A file that cannot be read fails with `InvalidDataException` (damaged), `PdfPasswordException` (wrong password) or `NotSupportedException` (a feature Arkki does not read). Streams decoding past 256 MB are refused.
+
+## Links
+
+- [Homepage](https://geezery.github.io/arkki/)
+- [Source code and README](https://github.com/geezery/arkki): the API with code samples
+- [Changelog](https://github.com/geezery/arkki/blob/main/CHANGELOG.md)
+- [Arkki.Pdf on NuGet](https://www.nuget.org/packages/Arkki.Pdf)
+- [Arkki.Pdf.Signing on NuGet](https://www.nuget.org/packages/Arkki.Pdf.Signing)

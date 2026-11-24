@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arkki: PDF for .NET in pure managed C#</title>
+<meta name="description" content="Arkki is a PDF library for .NET 10 in pure managed C#: a paginating layout engine, forms, AES-256 encryption and PAdES signatures. No dependencies, no native code. MPL-2.0.">
+<link rel="canonical" href="https://geezery.github.io/arkki/">
+<!-- The same facts in plain text for AI readers (llmstxt.org). -->
+<link rel="alternate" type="text/plain" title="Arkki for AI readers" href="https://geezery.github.io/arkki/llms.txt">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#1f5eff">
+<meta property="og:site_name" content="Arkki">
+<meta property="og:title" content="Arkki: PDF for .NET in pure managed C#">
+<meta property="og:description" content="A paginating layout engine, forms, AES-256 encryption and PAdES signatures. No dependencies, no native code. Windows, Linux and macOS.">
+<meta property="og:image" content="https://geezery.github.io/arkki/assets/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:url" content="https://geezery.github.io/arkki/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://geezery.github.io/arkki/assets/social-preview.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "Arkki",
+  "url": "https://geezery.github.io/arkki/",
+  "description": "PDF for .NET in pure managed C#: a paginating layout engine, reading, editing and merging, forms, AES-256 encryption and PAdES digital signatures. No dependencies and no native code.",
+  "programmingLanguage": "C#",
+  "runtimePlatform": ".NET 10",
+  "license": "https://www.mozilla.org/en-US/MPL/2.0/",
+  "codeRepository": "https://github.com/geezery/arkki",
+  "image": "https://geezery.github.io/arkki/icon.png"
+}
+</script>
+<style>
+@font-face{font-family:Geist;font-weight:400;font-display:swap;src:url(fonts/geist-400.woff2) format("woff2")}
+@font-face{font-family:Geist;font-weight:500;font-display:swap;src:url(fonts/geist-500.woff2) format("woff2")}
+@font-face{font-family:Geist;font-weight:600;font-display:swap;src:url(fonts/geist-600.woff2) format("woff2")}
+@font-face{font-family:Geist;font-weight:700;font-display:swap;src:url(fonts/geist-700.woff2) format("woff2")}
+
+/* Layout: a paper-white page, one blue, and ink-dark code sheets. Copy on the left, the thing itself on the right. */
+:root{
+  --bg:#f6f8fc;--surface:#ffffff;--ink:#0e1726;--text:#36435a;--muted:#5a6880;--line:#dde4ef;
+  --brand:#1f5eff;--brand-hover:#1a4fdb;--link:#1648d8;--tint:rgba(31,94,255,.08);
+  --code-bg:#0e1726;--code-line:#0e1726;--code-ink:#dbe4f5;
+  --paper:#ffffff;--paper-back:#cdd8ee;--paper-ink:#0e1726;--paper-rule:#d5ddeb;--fold:#b7c9ff;
+  --shadow:0 30px 70px rgba(14,23,38,.16);
+  --mono:ui-monospace,"Cascadia Code","SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#090f1a;--surface:#101929;--ink:#f3f6fc;--text:#c3cddd;--muted:#8f9cb3;--line:#1e2a3f;
+  --brand:#1f5eff;--brand-hover:#3b72ff;--link:#8fb0ff;--tint:rgba(80,130,255,.14);
+  --code-bg:#0d1524;--code-line:#1e2a3f;--code-ink:#dbe4f5;
+  --paper:#f7f9fd;--paper-back:#27344d;--paper-ink:#0e1726;--paper-rule:#d5ddeb;--fold:#b7c9ff;
+  --shadow:0 30px 80px rgba(0,0,0,.55);
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.6 Geist,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--link)}
+img,svg{max-width:100%}
+:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:16px;top:12px;z-index:20;background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:8px}
+code,pre,kbd{font-family:var(--mono)}
+p code,li code,td code{font-size:.88em;padding:2px 6px;border-radius:6px;background:var(--tint);color:var(--ink);overflow-wrap:anywhere}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:22px;height:62px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink);text-decoration:none;font-size:19px;letter-spacing:-.02em}
+.logo img{width:30px;height:30px;display:block}
+nav .links{margin-left:auto;display:flex;gap:22px;align-items:center;font-size:15px}
+nav .links a{text-decoration:none;color:var(--muted)}
+nav .links a:hover{color:var(--ink)}
+@media (max-width:720px){nav .links a.opt{display:none}}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border-radius:12px;font-weight:600;font-size:16px;text-decoration:none;transition:background .15s ease,transform .15s ease}
+.btn:active{transform:translateY(1px)}
+.btn.primary,nav .links a.btn.primary{background:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-hover)}
+.btn.ghost{color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);background:var(--surface)}
+.btn.ghost:hover{box-shadow:inset 0 0 0 1px var(--muted)}
+.btn.small{padding:8px 14px;font-size:14px;border-radius:10px}
+
+/* Hero */
+.hero{padding:72px 0 0}
+.hero .top{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.hero .copy{min-width:0}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600;color:var(--link);background:var(--tint);padding:5px 12px;border-radius:999px;text-decoration:none}
+h1{margin:20px 0 0;font-size:clamp(38px,5.6vw,62px);line-height:1.04;letter-spacing:-.035em;color:var(--ink);font-weight:700;text-wrap:balance}
+h1 em{font-style:normal;color:var(--brand)}
+@media (prefers-color-scheme:dark){h1 em{color:#6f98ff}}
+.lede{margin:22px 0 0;max-width:560px;font-size:clamp(17px,2vw,19.5px)}
+.install{margin-top:30px;display:flex;align-items:center;gap:8px;max-width:560px;background:var(--code-bg);border:1px solid var(--code-line);border-radius:14px;padding:6px 6px 6px 18px}
+.install code{flex:1;min-width:0;overflow-x:auto;white-space:nowrap;color:var(--code-ink);font-size:14.5px;padding:10px 0}
+.install code::before{content:"$ ";color:#7f8ea8}
+.install button{flex:none;font:600 13.5px Geist,sans-serif;color:#dbe4f5;background:#1c2942;border:0;border-radius:9px;padding:9px 14px;cursor:pointer}
+.install button:hover{background:#26375a}
+.ctas{margin-top:18px;display:flex;gap:12px;flex-wrap:wrap}
+.fine{margin-top:16px;font-size:13.5px;color:var(--muted)}
+.sheets{min-width:0;margin:0}
+.sheets svg{display:block;width:100%;height:auto;filter:drop-shadow(var(--shadow))}
+.sheets figcaption{margin-top:6px;text-align:center;font:500 12.5px var(--mono);color:var(--muted);letter-spacing:.02em}
+@media (max-width:860px){.hero{padding-top:48px}.hero .top{grid-template-columns:1fr;gap:36px}.sheets{max-width:400px;margin:0 auto;width:100%}}
+
+/* Facts strip */
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:64px 0 0;padding:0;list-style:none;background:var(--line);border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+.facts li{background:var(--bg);padding:20px 18px}
+.facts b{display:block;color:var(--ink);font-size:16px;font-weight:600}
+.facts span{display:block;margin-top:2px;font-size:13.5px;line-height:1.4;color:var(--muted)}
+@media (max-width:720px){.facts{grid-template-columns:1fr 1fr}}
+
+/* Sections */
+section{padding:96px 0 0}
+.kicker{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--link)}
+h2{margin:10px 0 0;font-size:clamp(28px,3.8vw,40px);line-height:1.1;letter-spacing:-.025em;color:var(--ink);font-weight:700;text-wrap:balance}
+.intro{margin:16px 0 0;max-width:640px}
+
+/* Feature areas: a ruled list, not a wall of cards */
+.areas{margin:40px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
+.areas li{padding:24px 0 26px;border-top:1px solid var(--line);min-width:0}
+.areas svg{width:26px;height:26px;color:var(--brand);display:block}
+@media (prefers-color-scheme:dark){.areas svg{color:#6f98ff}}
+.areas h3{margin:14px 0 6px;font-size:18px;color:var(--ink);letter-spacing:-.01em}
+.areas p{margin:0;font-size:15.5px}
+@media (max-width:860px){.areas{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.areas{grid-template-columns:1fr}}
+
+/* Code samples */
+.sample{display:grid;grid-template-columns:.8fr 1.4fr;gap:40px;align-items:start;margin-top:56px}
+.sample:first-of-type{margin-top:40px}
+.sample .copy{min-width:0}
+.sample h3{margin:0;font-size:22px;color:var(--ink);letter-spacing:-.015em}
+.sample p{margin:12px 0 0;font-size:16px}
+.sample ul{margin:14px 0 0;padding:0 0 0 18px;font-size:15.5px}
+.sample li{margin:6px 0}
+.sample li::marker{color:var(--brand)}
+pre{margin:0;min-width:0;background:var(--code-bg);border:1px solid var(--code-line);border-radius:16px;padding:20px 22px;overflow-x:auto;color:var(--code-ink);font-size:13.5px;line-height:1.65;tab-size:4;box-shadow:var(--shadow)}
+pre code{display:block;width:max-content;min-width:100%}
+.c{color:#8493ad}.s{color:#f2c57c}.k{color:#8fb0ff}.t{color:#7fd6e0}.n{color:#f2a37c}
+@media (max-width:860px){.sample{grid-template-columns:1fr;gap:20px}}
+
+/* Numbers */
+.numbers{margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.number{background:var(--surface);border-radius:18px;padding:28px;box-shadow:inset 0 0 0 1px var(--line);min-width:0}
+.number b{display:block;font-size:clamp(34px,5vw,48px);line-height:1;letter-spacing:-.03em;color:var(--ink);font-variant-numeric:tabular-nums}
+.number b small{font-size:.45em;font-weight:600;letter-spacing:0;color:var(--muted);margin-left:4px}
+.number p{margin:14px 0 0;font-size:15.5px}
+@media (max-width:720px){.numbers{grid-template-columns:1fr}}
+
+/* Packages */
+.table{margin-top:32px;border-radius:16px;overflow-x:auto;box-shadow:inset 0 0 0 1px var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:15px}
+th,td{text-align:left;padding:14px 18px;border-top:1px solid var(--line);vertical-align:top}
+tr:first-child th{border-top:0;color:var(--ink);font-weight:600;font-size:14px}
+td:first-child,td:last-child code{white-space:nowrap}
+td:first-child a{font-weight:600;font-family:var(--mono);font-size:14px}
+
+/* Limits */
+.limits{margin:32px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.limits li{padding:13px 0 13px 28px;border-top:1px solid var(--line);position:relative;font-size:16px}
+.limits li::before{content:"";position:absolute;left:4px;top:1.35em;width:12px;height:2px;background:var(--muted);border-radius:2px}
+@media (max-width:720px){.limits{grid-template-columns:1fr}}
+.note{margin-top:24px;padding:18px 22px;border-radius:14px;background:var(--tint);font-size:15.5px;max-width:760px}
+
+footer{margin-top:96px;border-top:1px solid var(--line);padding:36px 0 48px;font-size:14.5px;color:var(--muted)}
+footer .wrap{display:flex;gap:24px;flex-wrap:wrap;align-items:center}
+footer a{text-decoration:none;color:var(--muted)}
+footer a:hover{color:var(--ink)}
+footer .right{margin-left:auto}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav aria-label="Main">
+  <div class="wrap">
+    <a class="logo" href="#"><img src="icon.png" alt="" width="30" height="30">Arkki</a>
+    <div class="links">
+      <a class="opt" href="#features">Features</a>
+      <a class="opt" href="#code">Code</a>
+      <a class="opt" href="#limits">Limits</a>
+      <a class="opt" href="https://github.com/geezery/arkki">GitHub</a>
+      <a class="btn primary small" href="https://www.nuget.org/packages/Arkki.Pdf">NuGet</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap top">
+    <div class="copy">
+      <a class="eyebrow" href="https://github.com/geezery/arkki/blob/main/CHANGELOG.md">1.0.0-rc.1 · the first release candidate</a>
+      <h1>PDF for .NET, in <em>pure managed C#.</em></h1>
+      <p class="lede">Arkki creates documents with a paginating layout engine, opens and edits existing files, fills and creates forms, encrypts, and signs. No native binaries, no System.Drawing, no browser engine.</p>
+      <div class="install">
+        <code id="install-cmd">dotnet add package Arkki.Pdf --prerelease</code>
+        <button type="button" id="copy-install" aria-label="Copy the install command">Copy</button>
+      </div>
+      <div class="ctas">
+        <a class="btn primary" href="https://github.com/geezery/arkki">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.11 3.06.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.4-5.27 5.68.42.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+          View on GitHub</a>
+        <a class="btn ghost" href="https://www.nuget.org/packages/Arkki.Pdf">Arkki.Pdf on NuGet</a>
+      </div>
+      <div class="fine">.NET 10 · Windows, Linux and macOS · open source (MPL-2.0)</div>
+    </div>
+
+    <figure class="sheets">
+      <svg viewBox="50 20 320 410" role="img" aria-label="Three A4 sheets from one document: a title, a table with a repeated header, radio buttons, a check box, a barcode and a signature mark">
+        <g transform="rotate(-7 210 240)"><rect x="92" y="62" width="236" height="334" rx="6" fill="var(--paper-back)"/></g>
+        <g transform="rotate(5 210 240)"><rect x="92" y="62" width="236" height="334" rx="6" fill="var(--paper-back)" opacity=".7"/></g>
+        <!-- Front sheet, 210 x 297 in proportion, with the folded corner of the mark. -->
+        <path d="M98 52h196l40 40v288a6 6 0 0 1-6 6H98a6 6 0 0 1-6-6V58a6 6 0 0 1 6-6z" fill="var(--paper)"/>
+        <path d="M294 52v34a6 6 0 0 0 6 6h34z" fill="var(--fold)"/>
+        <rect x="112" y="74" width="26" height="26" rx="6" fill="#1f5eff"/>
+        <path d="M119.5 93.5l5.5-12.5 5.5 12.5" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="148" y="78" width="84" height="8" rx="4" fill="var(--paper-ink)"/>
+        <rect x="148" y="92" width="52" height="5" rx="2.5" fill="var(--paper-rule)"/>
+        <rect x="112" y="118" width="150" height="4.5" rx="2.25" fill="var(--paper-rule)"/>
+        <rect x="112" y="128" width="196" height="4.5" rx="2.25" fill="var(--paper-rule)"/>
+        <rect x="112" y="138" width="120" height="4.5" rx="2.25" fill="var(--paper-rule)"/>
+        <!-- Table -->
+        <rect x="112" y="158" width="202" height="18" rx="4" fill="#1f5eff"/>
+        <rect x="120" y="165" width="40" height="4" rx="2" fill="#fff"/><rect x="280" y="165" width="26" height="4" rx="2" fill="#fff"/>
+        <g fill="var(--paper-rule)">
+          <rect x="120" y="186" width="92" height="4" rx="2"/><rect x="284" y="186" width="22" height="4" rx="2"/>
+          <rect x="112" y="198" width="202" height="1"/>
+          <rect x="120" y="207" width="70" height="4" rx="2"/><rect x="278" y="207" width="28" height="4" rx="2"/>
+          <rect x="112" y="219" width="202" height="1"/>
+          <rect x="120" y="228" width="104" height="4" rx="2"/><rect x="288" y="228" width="18" height="4" rx="2"/>
+          <rect x="112" y="240" width="202" height="1"/>
+        </g>
+        <rect x="252" y="250" width="54" height="6" rx="3" fill="var(--paper-ink)"/>
+        <!-- Form: radio buttons and a check box -->
+        <g fill="none" stroke="var(--paper-ink)" stroke-width="1.6">
+          <circle cx="119" cy="282" r="6"/><circle cx="119" cy="302" r="6"/>
+          <rect x="113" y="316" width="12" height="12" rx="2.5"/>
+        </g>
+        <circle cx="119" cy="282" r="3" fill="#1f5eff"/>
+        <path d="M115.8 322l2.6 2.7 4.4-5.2" fill="none" stroke="#1f5eff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <g fill="var(--paper-rule)"><rect x="133" y="280" width="48" height="4" rx="2"/><rect x="133" y="300" width="62" height="4" rx="2"/><rect x="133" y="320" width="40" height="4" rx="2"/></g>
+        <!-- Barcode -->
+        <g fill="var(--paper-ink)">
+          <rect x="112" y="344" width="2" height="26"/><rect x="116" y="344" width="1" height="26"/><rect x="119" y="344" width="3" height="26"/><rect x="124" y="344" width="1" height="26"/><rect x="127" y="344" width="2" height="26"/><rect x="131" y="344" width="1" height="26"/><rect x="134" y="344" width="3" height="26"/><rect x="139" y="344" width="2" height="26"/><rect x="143" y="344" width="1" height="26"/><rect x="146" y="344" width="1" height="26"/><rect x="149" y="344" width="3" height="26"/><rect x="154" y="344" width="2" height="26"/><rect x="158" y="344" width="1" height="26"/><rect x="161" y="344" width="3" height="26"/><rect x="166" y="344" width="1" height="26"/><rect x="169" y="344" width="2" height="26"/><rect x="173" y="344" width="2" height="26"/><rect x="177" y="344" width="1" height="26"/><rect x="180" y="344" width="3" height="26"/><rect x="185" y="344" width="2" height="26"/>
+        </g>
+        <!-- Signature mark -->
+        <circle cx="286" cy="318" r="22" fill="none" stroke="#1f5eff" stroke-width="2"/>
+        <path d="M276 318.5l7 7 13-15" fill="none" stroke="#1f5eff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="262" y="350" width="48" height="4" rx="2" fill="var(--paper-rule)"/>
+        <rect x="270" y="360" width="32" height="4" rx="2" fill="var(--paper-rule)"/>
+      </svg>
+      <figcaption>A4 · 210 × 297 mm · page 1 (3)</figcaption>
+    </figure>
+  </div>
+
+  <div class="wrap">
+    <ul class="facts">
+      <li><b>0 dependencies</b><span>The core package stands alone</span></li>
+      <li><b>No native code</b><span>Managed C# on .NET's own APIs</span></li>
+      <li><b>Deterministic</b><span>Same input, same bytes</span></li>
+      <li><b>MPL-2.0</b><span>Open source, usable in closed apps</span></li>
+    </ul>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+  <section id="features">
+    <div class="kicker">What it does</div>
+    <h2>One library from a blank sheet to a signed file.</h2>
+    <p class="intro">Arkki is Finnish for a sheet of paper. It covers the whole life of a PDF, and runs the same on Windows, Linux and macOS.</p>
+    <ul class="areas">
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg>
+        <h3>Create with a layout engine</h3>
+        <p>A tree of elements flows onto as many pages as it needs: mixed-style and justified text, lists, tables with repeated headers and column spans, rows, columns, keep-together, headers and footers with page numbers.</p>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10v13H4zM8 7V4h12v13h-6M7 12h4M7 16h4"/></svg>
+        <h3>Open, edit and merge</h3>
+        <p>Stamp over existing pages, insert, remove, move and rotate them, merge files, extract pages, add bookmarks and attachments. The reader repairs damaged cross-references and extracts text.</p>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="6" height="6" rx="1.5"/><path d="M4.8 17l1.2 1.2 2-2.4M13 17h8"/></svg>
+        <h3>Forms</h3>
+        <p>Text fields, check boxes, radio buttons, combo boxes and list boxes. Fill an existing form by its field names, create fields on new pages, and read the fields of any file. Filled fields get their own appearance, so they show in every viewer.</p>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3M12 15v2"/></svg>
+        <h3>Encryption</h3>
+        <p>Writes AES-256 (PDF 2.0, revision 6) with user and owner passwords and permissions. Reads every standard security handler revision: RC4 40/128-bit, AES-128 and AES-256.</p>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6zM9 12l2.2 2.2L15 10"/></svg>
+        <h3>PAdES signatures</h3>
+        <p>The <code>Arkki.Pdf.Signing</code> package signs at PAdES B-B and B-T (with an RFC 3161 timestamp) as an incremental update, so earlier signatures stay valid, and verifies integrity, coverage and the certificate chain.</p>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="5" width="2" height="14"/><rect x="7" y="5" width="1" height="14"/><rect x="10" y="5" width="3" height="14"/><rect x="15" y="5" width="1" height="14"/><rect x="18" y="5" width="3" height="14"/></svg>
+        <h3>Barcodes</h3>
+        <p>Code 128, EAN-13 and QR code drawn as vector rectangles, in the flow or at an exact position. Other symbologies plug in through <code>IBarcodeSymbology</code>.</p>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19l5-13h1l5 13M6 14h7M17 10h2a2 2 0 0 1 2 2v7h-3a2 2 0 0 1 0-4h3"/></svg>
+        <h3>Fonts and images</h3>
+        <p>TrueType fonts are embedded as subsets of the glyphs used; OpenType CFF fonts are embedded whole. PNG with transparency and JPEG, stored in the cheapest lossless form and once per document.</p>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14v16H5zM5 9h14M10 9v11"/></svg>
+        <h3>An exact canvas</h3>
+        <p>When a form needs every mark in its place, draw directly: text, rotated text, opacity, barcodes and links at coordinates you give, in points or millimetres.</p>
+      </li>
+      <li>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 4-3.2 7.4-8 9-4.8-1.6-8-5-8-9V7zM12 8v5M12 16.5v.010"/></svg>
+        <h3>Robust against bad files</h3>
+        <p>A file that cannot be read fails with a clear exception, never a hang. The test suite mutates every sample file thousands of times and refuses streams that decode past 256 MB.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section id="code">
+    <div class="kicker">In code</div>
+    <h2>Reads like the document it makes.</h2>
+    <p class="intro">The samples below are taken from the README.</p>
+
+    <div class="sample">
+      <div class="copy">
+        <h3>Create a document</h3>
+        <p>Build a tree of layout elements and render it. It takes as many pages as it needs, and the header knows the page count.</p>
+        <ul>
+          <li>Left, right, centred and justified text</li>
+          <li>Table headers repeat on each page</li>
+          <li>Paper sizes A0–A7, B, C, DL, Letter, Legal and any custom size</li>
+        </ul>
+      </div>
+<pre tabindex="0" aria-label="C# sample: create a document"><code>var doc = new PdfDocument();
+doc.Info.Title = "Order 1187";
+var fonts = new FontFamily(doc.AddFont(File.ReadAllBytes("Inter-Regular.ttf")),
+                           doc.AddFont(File.ReadAllBytes("Inter-Bold.ttf")));
+var body = new TextStyle(fonts, 10);
+
+var table = new Table([new TableColumn(Len.Star()), new TableColumn(Len.Mm(30), HAlign.Right)])
+    .SetHeader(body with { Bold = true }, "Item", "Amount");
+table.AddRow(body, "Machining", "258,00");
+
+new FlowDocument
+{
+    Header = page =&gt; new TextBlock($"Page {page.PageNumber} ({page.PageCount})", body, HAlign.Right),
+    Content = new Column(
+        new TextBlock("Order 1187", body with { Size = 18, Bold = true }),
+        new ListBlock(body, ListMarker.Number).Add("Check the parts").Add("Book the time"),
+        table) { Spacing = 8 },
+}.RenderTo(doc);
+
+using var file = File.Create("order.pdf");
+doc.Save(file);              // or doc.ToArray()</code></pre>
+    </div>
+
+    <div class="sample">
+      <div class="copy">
+        <h3>Open, edit and merge</h3>
+        <p>Open a file someone else made, draw over it, rearrange its pages and save. Merging stores identical objects once.</p>
+      </div>
+<pre tabindex="0" aria-label="C# sample: open, edit and merge"><code>var doc = PdfDocument.Open(File.ReadAllBytes("contract.pdf"));
+
+// Stamp: draw over an existing page.
+PdfCanvas c = doc.Pages[0].Canvas;
+c.Save(); c.SetOpacity(0.2); c.TextRotated(font, 60, 150, 500, 45, "DRAFT"); c.Restore();
+
+// Pages: insert, remove, move, rotate.
+doc.RemovePageAt(3);
+doc.MovePage(0, 2);
+doc.Pages[1].Rotation = 90;
+
+// Bookmarks and attachments.
+doc.Outline.Add("Terms", doc.Pages[1]);
+doc.Attach("order.xml", File.ReadAllBytes("order.xml"), "application/xml");
+
+byte[] batch = PdfDocument.Merge(invoicePdfs).ToArray();
+PdfDocument firstTwo = PdfDocument.ExtractPages(pdf, 0, 1);</code></pre>
+    </div>
+
+    <div class="sample">
+      <div class="copy">
+        <h3>Fill and create forms</h3>
+        <p>Set values by field name, or put new fields on a page. Reading works on any file, whoever made it.</p>
+      </div>
+<pre tabindex="0" aria-label="C# sample: forms"><code>// Fill an existing form by its field names.
+var doc = PdfDocument.Open(File.ReadAllBytes("application.pdf"));
+doc.Form.SetValue("customer.name", "Maija Meikäläinen");
+doc.Form.SetChecked("agree", true);
+doc.Form.SetValue("delivery", "courier");          // a radio group
+doc.Form.SetValues("extras", ["Gift wrap", "Insurance"]);
+
+// Or create fields.
+PdfPage page = doc.AddPage();
+page.AddTextField("email", x: 50, y: 100, width: 200, height: 18);
+page.AddCheckBox("newsletter", x: 50, y: 130, size: 12);
+page.AddRadioButton("plan", "basic", x: 50, y: 160, size: 12, selected: true);
+page.AddRadioButton("plan", "pro", x: 50, y: 180, size: 12);
+page.AddComboBox("language", x: 50, y: 210, width: 120, height: 18,
+    ["Suomi", "Svenska", "English"], value: "Suomi");
+page.AddListBox("days", x: 50, y: 240, width: 120, height: 40,
+    ["Mon", "Tue", "Wed"], multiSelect: true);
+
+// Read the fields of any file.
+foreach (PdfFormField f in PdfReader.Open(pdf).GetFormFields())
+    Console.WriteLine($"{f.Name} = {f.Value}");</code></pre>
+    </div>
+
+    <div class="sample">
+      <div class="copy">
+        <h3>Encrypt and sign</h3>
+        <p>Encryption is one property. Signing lives in its own package, which adds only Microsoft's <code>System.Security.Cryptography.Pkcs</code>.</p>
+        <ul>
+          <li>RSA and ECDSA keys, SHA-256/384/512</li>
+          <li>The verifier reports integrity, coverage, level and chain trust</li>
+        </ul>
+      </div>
+<pre tabindex="0" aria-label="C# sample: encryption and signatures"><code>doc.Encryption = new PdfEncryption(userPassword: "open", ownerPassword: "owner",
+    permissions: PdfPermissions.Print | PdfPermissions.Copy);
+
+X509Certificate2 cert = X509CertificateLoader.LoadPkcs12FromFile("signer.p12", password);
+byte[] signed = PdfSigner.Sign(pdf, cert,
+    new PdfSignatureOptions { Reason = "Approved", Location = "Helsinki" });
+
+// PAdES B-T: the signature is timestamped by an RFC 3161 authority.
+byte[] stamped = await PdfSigner.SignAsync(pdf, cert, new PdfSignatureOptions
+{
+    Timestamp = new HttpTimestampClient(httpClient, new Uri("https://tsa.example.com")),
+});
+
+foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(stamped, trustedRoots))
+    Console.WriteLine($"{s.FieldName}: intact {s.IsIntact}, {s.Level}, trusted {s.ChainTrusted}");</code></pre>
+    </div>
+  </section>
+
+  <section id="performance">
+    <div class="kicker">Performance and size</div>
+    <h2>Fast enough to run per request.</h2>
+    <p class="intro">Measured on a two-core cloud VM. Fonts are subset, images are embedded once, and merging stores identical objects once.</p>
+    <div class="numbers">
+      <div class="number">
+        <b>1.2<small>s</small></b>
+        <p>A 50 000-row table lays out to 1 021 pages in about 1.2 seconds, and the file is 1.5 MB.</p>
+      </div>
+      <div class="number">
+        <b>5<small>ms</small></b>
+        <p>The three-page sample invoice renders in about 5 ms, at roughly 100 kB including the logo and two subset fonts.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="packages">
+    <div class="kicker">Packages</div>
+    <h2>Two packages, .NET 10.</h2>
+    <div class="table" tabindex="0" role="region" aria-label="Packages">
+      <table>
+        <tr><th scope="col">Package</th><th scope="col">Contents</th><th scope="col">Depends on</th></tr>
+        <tr>
+          <td><a href="https://www.nuget.org/packages/Arkki.Pdf">Arkki.Pdf</a></td>
+          <td>Writer, layout engine, fonts, images, barcodes, reader, merging, page operations, stamping, forms, links, bookmarks, attachments, encryption</td>
+          <td>Nothing</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.nuget.org/packages/Arkki.Pdf.Signing">Arkki.Pdf.Signing</a></td>
+          <td>PAdES digital signatures (B-B, and B-T with an RFC 3161 timestamp) and their verification</td>
+          <td><code>System.Security.Cryptography.Pkcs</code></td>
+        </tr>
+      </table>
+    </div>
+    <p class="note">Fonts and images are immutable and safe to share across threads. A <code>PdfDocument</code> or a <code>PdfReader</code> is used by one thread at a time; build documents in parallel freely. Arkki never looks for system fonts: you pass in the bytes.</p>
+  </section>
+
+  <section id="limits">
+    <div class="kicker">Not included</div>
+    <h2>What Arkki does not do.</h2>
+    <p class="intro">Better to know before you start than after.</p>
+    <ul class="limits">
+      <li>Tagged PDF and PDF/UA</li>
+      <li>PDF/A</li>
+      <li>Right-to-left and complex-script shaping (Arabic, Indic)</li>
+      <li>Rendering pages to images</li>
+      <li>SVG</li>
+      <li>CFF font subsetting (CFF fonts are embedded whole)</li>
+      <li>Visible signature appearances</li>
+      <li>Long-term validation data (PAdES B-LT, B-LTA) and revocation checking</li>
+      <li>Signing with an external device or service</li>
+      <li>Hyphenation dictionaries (plug in your own with <code>IHyphenator</code>)</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Arkki · MPL-2.0</span>
+    <a href="https://github.com/geezery/arkki">GitHub</a>
+    <a href="https://github.com/geezery/arkki/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/geezery/arkki/issues">Issues</a>
+    <a href="https://www.nuget.org/packages/Arkki.Pdf">NuGet</a>
+    <span class="right">Set in <a href="fonts/LICENSE-Geist.txt">Geist</a> (SIL OFL 1.1)</span>
+  </div>
+</footer>
+
+<script>
+// Copy button: the command stays selectable if the clipboard is refused.
+document.getElementById('copy-install').addEventListener('click', function () {
+  var btn = this, cmd = document.getElementById('install-cmd');
+  function done(text) { btn.textContent = text; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); }
+  function select() { var r = document.createRange(); r.selectNodeContents(cmd); var s = getSelection(); s.removeAllRanges(); s.addRange(r); done('Selected'); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(cmd.textContent).then(function () { done('Copied'); }, select);
+  else select();
+});
+
+// A small C# highlighter: comments, strings, keywords, type names and numbers. Without it the code is plain.
+(function () {
+  var kw = /^(?:var|new|using|with|foreach|in|await|true|false|null|byte|string|int|double|return)$/;
+  var re = /(\/\/[^\n]*)|(\$?"(?:[^"\\\n]|\\.)*")|\b([A-Za-z_][A-Za-z0-9_]*)\b|\b(\d+(?:\.\d+)?)\b/g;
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  var blocks = document.querySelectorAll('pre code');
+  for (var i = 0; i < blocks.length; i++) {
+    var src = blocks[i].textContent, out = '', last = 0, m;
+    re.lastIndex = 0;
+    while ((m = re.exec(src))) {
+      out += esc(src.slice(last, m.index));
+      var isType = m[3] && /^[A-Z]/.test(m[3]) && /[a-z]/.test(m[3]) && src[m.index - 1] !== '.' && !/^\s*[=:][^>=]/.test(src.slice(m.index + m[0].length));
+      var cls = m[1] ? 'c' : m[2] ? 's' : m[4] ? 'n' : kw.test(m[3]) ? 'k' : isType ? 't' : '';
+      out += cls ? '<span class="' + cls + '">' + esc(m[0]) + '</span>' : esc(m[0]);
+      last = m.index + m[0].length;
+    }
+    blocks[i].innerHTML = out + esc(src.slice(last));
+  }
+})();
+</script>
+</body>
+</html>
