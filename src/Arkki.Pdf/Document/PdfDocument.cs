@@ -470,7 +470,7 @@ public sealed class PdfDocument
         foreach (int id in ctx.NewFields) b.Int(id).Ascii(" 0 R ");
         foreach (string f in imported) b.Ascii(f).Sp();
         b.Ascii("] /DR << /Font << /Helv ").Int(ctx.Helvetica).Ascii(" 0 R /ZaDb ").Int(ctx.ZapfDingbats).Ascii(" 0 R").Ascii(sourceFonts)
-            .Ascii(" >> >> /DA (/Helv 0 Tf 0 g) >>");
+            .Ascii(" >> >> /DA (/Helv 0 Tf 0 g)").Ascii(ctx.HasSignatureFields ? " /SigFlags 1 >>" : " >>");
     }
 
     private sealed class ByteOrder : IComparer<byte[]>

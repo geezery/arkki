@@ -50,6 +50,9 @@ internal sealed class SaveContext(PdfWriter writer, Func<PdfPage, int?> pageId)
     /// <summary>ZapfDingbats, for the tick of a check box.</summary>
     public int ZapfDingbats => _zapf != 0 ? _zapf : _zapf = WriteFont("ZapfDingbats", "");
 
+    /// <summary>True once a signature field is written: the form then says so in its /SigFlags.</summary>
+    public bool HasSignatureFields { get; set; }
+
     public bool UsedFormFonts => _helvetica != 0 || _zapf != 0;
 
     private readonly List<(RadioGroup Group, int Id, List<(int Id, string Value)> Kids)> _radioGroups = [];

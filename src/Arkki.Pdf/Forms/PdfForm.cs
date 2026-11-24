@@ -86,7 +86,8 @@ public sealed class PdfFormField
 /// <summary>
 /// The form of a document: the fields of the pages it imported (see <see cref="PdfDocument.Open(byte[], string?)"/>) and
 /// the ones added with <see cref="PdfPage.AddTextField"/>, <see cref="PdfPage.AddCheckBox"/>,
-/// <see cref="PdfPage.AddRadioButton"/>, <see cref="PdfPage.AddComboBox"/> and <see cref="PdfPage.AddListBox"/>. Filling a
+/// <see cref="PdfPage.AddRadioButton"/>, <see cref="PdfPage.AddComboBox"/>, <see cref="PdfPage.AddListBox"/> and
+/// <see cref="PdfPage.AddSignatureField"/>. Filling a
 /// field gives it a new appearance, so it shows the value in every viewer.
 /// </summary>
 public sealed class PdfForm

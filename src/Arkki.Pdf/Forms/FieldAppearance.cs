@@ -116,6 +116,14 @@ internal static class FieldAppearance
         return Form(ctx, width, height, c, $"/Font << /Helv {ctx.Helvetica} 0 R >>");
     }
 
+    /// <summary>Writes an appearance that is the frame alone, for a field with nothing in it yet.</summary>
+    public static int Empty(SaveContext ctx, double width, double height, FieldFrame frame)
+    {
+        var c = new ByteBuf(64);
+        frame.Write(c, width, height);
+        return Form(ctx, width, height, c, "");
+    }
+
     /// <summary>Writes the "on" (a tick) or "off" (empty) appearance of a check box.</summary>
     public static int Check(SaveContext ctx, double width, double height, bool on, FieldFrame? frame = null)
     {

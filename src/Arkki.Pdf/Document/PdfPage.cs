@@ -154,6 +154,22 @@ public sealed class PdfPage
         string? value = null, double fontSize = 10, bool multiSelect = false, bool readOnly = false) =>
         AddChoice(name, x, y, width, height, options, value, fontSize, combo: false, editable: false, multiSelect, readOnly);
 
+    /// <summary>
+    /// Adds an empty signature field: a box that marks where a signature goes. Sign it with <c>PdfSigner</c> of the
+    /// Arkki.Pdf.Signing package by giving the field's name, or leave it for the reader to sign in a viewer.
+    /// </summary>
+    public PdfFormField AddSignatureField(string name, double x, double y, double width, double height)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+        var a = new SignatureFieldAnnotation(this, name, x, y, width, height);
+        var field = new PdfFormField(name, PdfFieldKind.Signature, null, false, []) { Created = a };
+        Document.Form.Add(field);
+        _annotations.Add(a);
+        return field;
+    }
+
     private PdfFormField AddChoice(string name, double x, double y, double width, double height, IEnumerable<string> options, string? value,
         double fontSize, bool combo, bool editable, bool multiSelect, bool readOnly)
     {

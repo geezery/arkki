@@ -55,6 +55,28 @@ internal sealed class CheckBoxAnnotation(PdfPage page, string name, double x, do
     }
 }
 
+/// <summary>An empty signature field: a framed box waiting for a signature.</summary>
+internal sealed class SignatureFieldAnnotation(PdfPage page, string name, double x, double y, double width, double height)
+    : PageAnnotation(page, x, y, width, height)
+{
+    public override int Write(SaveContext ctx, int pageId)
+    {
+        int ap = FieldAppearance.Empty(ctx, Width, Height, FieldFrame.Created);
+        var (parent, partial) = ctx.FieldPlace(name);
+        var b = new ByteBuf(256);
+        b.Ascii("<< /Type /Annot /Subtype /Widget /FT /Sig /T ");
+        PdfSerializer.WriteString(b, PdfSerializer.TextBytes(partial), hex: true);
+        if (parent != 0) b.Ascii(" /Parent ").Int(parent).Ascii(" 0 R");
+        b.Ascii(" /F 4 /MK << /BC [").Ascii(FieldAppearance.BorderColor).Ascii("] >> /P ").Int(pageId).Ascii(" 0 R ");
+        Rect(b).Ascii(" /AP << /N ").Int(ap).Ascii(" 0 R >> >>");
+        int id = ctx.Writer.Reserve();
+        ctx.Writer.WriteObject(id, b);
+        ctx.AddField(id, parent);
+        ctx.HasSignatureFields = true;
+        return id;
+    }
+}
+
 /// <summary>
 /// A radio group created in this document: one field whose buttons (its widgets) can lie on any pages. The field is
 /// written once every page has written its buttons, so it lists only the buttons of pages still in the document.
