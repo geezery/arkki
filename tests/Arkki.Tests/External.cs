@@ -16,11 +16,24 @@ internal static class External
     public static (int Exit, string Output)? Run(string tool, byte[] pdf, params string[] args)
     {
         if (Missing.Contains(tool)) { Skipped++; return null; }
+        if (tool.StartsWith("pdf", StringComparison.Ordinal) && Probed.Add(tool) && !IsPoppler(tool))
+        {
+            Missing.Add(tool);
+            Skipped++;
+            Console.WriteLine($"skip  {tool} is not poppler's: its checks are skipped");
+            return null;
+        }
         string path = Path.Combine(Path.GetTempPath(), $"arkki-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, pdf);
         try
         {
-            var psi = new ProcessStartInfo(tool) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+            var psi = new ProcessStartInfo(tool)
+            {
+                RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false,
+                StandardOutputEncoding = System.Text.Encoding.UTF8, StandardErrorEncoding = System.Text.Encoding.UTF8,
+            };
+            // Python on Windows writes in the console's code page unless told otherwise.
+            psi.Environment["PYTHONUTF8"] = "1";
             foreach (string a in args) psi.ArgumentList.Add(a == "{file}" ? path : a);
             using var p = Process.Start(psi)!;
             string output = p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd();
@@ -35,6 +48,26 @@ internal static class External
             return null;
         }
         finally { File.Delete(path); }
+    }
+
+    private static readonly HashSet<string> Probed = [];
+
+    /// <summary>
+    /// True when the tool is poppler's or is not installed at all (then running it reports it missing). Git for Windows
+    /// ships Xpdf's pdftotext under the same name, with other options and output, so its opinion is not asked.
+    /// </summary>
+    private static bool IsPoppler(string tool)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo(tool) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+            psi.ArgumentList.Add("-v");
+            using var p = Process.Start(psi)!;
+            string output = p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd();
+            p.WaitForExit(60_000);
+            return output.Contains("poppler", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (System.ComponentModel.Win32Exception) { return true; }
     }
 
     /// <summary>qpdf finds no syntax or stream errors (warnings fail too). True when qpdf is not installed.</summary>
