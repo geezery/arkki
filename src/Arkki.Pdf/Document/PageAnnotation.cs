@@ -22,6 +22,28 @@ internal sealed class SaveContext(PdfWriter writer, Func<PdfPage, int?> pageId)
 
     public bool UsedFormFonts => _helvetica != 0 || _zapf != 0;
 
+    private readonly List<(RadioGroup Group, int Id, List<(int Id, string Value)> Kids)> _radioGroups = [];
+
+    /// <summary>The object number of a radio group's field, reserved when its first button is written.</summary>
+    public int RadioParent(RadioGroup group)
+    {
+        foreach (var g in _radioGroups) if (g.Group == group) return g.Id;
+        int id = Writer.Reserve();
+        _radioGroups.Add((group, id, []));
+        NewFields.Add(id);
+        return id;
+    }
+
+    /// <summary>The buttons of a radio group written so far.</summary>
+    public List<(int Id, string Value)> RadioKids(RadioGroup group) => _radioGroups.First(g => g.Group == group).Kids;
+
+    /// <summary>Writes the fields of the radio groups whose buttons were written; call once after the pages.</summary>
+    public void WriteRadioGroups()
+    {
+        foreach (var (group, id, kids) in _radioGroups) RadioButtonAnnotation.WriteGroup(this, group, id, kids);
+        _radioGroups.Clear();
+    }
+
     private int WriteFont(string baseFont, string extra)
     {
         int id = Writer.Reserve();

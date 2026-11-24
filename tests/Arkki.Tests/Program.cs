@@ -21,6 +21,7 @@ TextExtractionTests.Run();
 FileSizeTests.Run();
 EditingTests.Run();
 FormTests.Run();
+FormChoiceTests.Run();
 EncryptionTests.Run();
 
 // The Finvoice sample

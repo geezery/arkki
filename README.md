@@ -113,18 +113,27 @@ user or owner password). It extracts text (`ExtractText`) and reads metadata (`I
 var doc = PdfDocument.Open(File.ReadAllBytes("application.pdf"));
 doc.Form.SetValue("customer.name", "Maija Meikäläinen");
 doc.Form.SetChecked("agree", true);
+doc.Form.SetValue("delivery", "courier");          // a radio group, by the button's value
+doc.Form.SetValue("country", "Norge");             // a combo or list box, by the option
+doc.Form.SetValues("extras", ["Gift wrap", "Insurance"]);   // a list box that takes several
 
 // Or create fields.
 PdfPage page = doc.AddPage();
 page.AddTextField("email", x: 50, y: 100, width: 200, height: 18);
 page.AddCheckBox("newsletter", x: 50, y: 130, size: 12);
+page.AddRadioButton("plan", "basic", x: 50, y: 160, size: 12, selected: true);
+page.AddRadioButton("plan", "pro", x: 50, y: 180, size: 12);
+page.AddComboBox("language", x: 50, y: 210, width: 120, height: 18, ["Suomi", "Svenska", "English"], value: "Suomi");
+page.AddListBox("days", x: 50, y: 240, width: 120, height: 40, ["Mon", "Tue", "Wed"], multiSelect: true);
 
 // Read the fields of any file.
 foreach (PdfFormField f in PdfReader.Open(pdf).GetFormFields()) Console.WriteLine($"{f.Name} = {f.Value}");
 ```
 
-Text fields, check boxes, radio buttons and choice fields are read; text fields and check boxes are filled and
-created. Filled fields get new appearance streams, so they show in every viewer.
+Text fields, check boxes, radio buttons, combo boxes and list boxes are read, filled and created. Radio buttons
+with the same group name form one field, on one page or several. A created field draws its own thin border, and
+a filled field gets a new appearance stream, so both show in every viewer. Field appearances use Helvetica with
+Western European characters. Not included: push buttons, JavaScript actions and calculated fields.
 
 ## Encryption
 

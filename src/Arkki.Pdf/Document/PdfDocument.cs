@@ -446,6 +446,7 @@ public sealed class PdfDocument
 
     private void WriteAcroForm(ByteBuf b, SaveContext ctx, PageImporter? importer)
     {
+        ctx.WriteRadioGroups();
         var imported = new List<string>();
         string sourceFonts = "";
         if (importer is not null)

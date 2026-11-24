@@ -64,6 +64,13 @@ internal static class ReadmeTests
         PdfPage formPage = formDoc.AddPage();
         formPage.AddTextField("email", x: 50, y: 100, width: 200, height: 18);
         formPage.AddCheckBox("newsletter", x: 50, y: 130, size: 12);
+        formPage.AddRadioButton("plan", "basic", x: 50, y: 160, size: 12, selected: true);
+        formPage.AddRadioButton("plan", "pro", x: 50, y: 180, size: 12);
+        formPage.AddComboBox("language", x: 50, y: 210, width: 120, height: 18, ["Suomi", "Svenska", "English"], value: "Suomi");
+        formPage.AddListBox("days", x: 50, y: 240, width: 120, height: 40, ["Mon", "Tue", "Wed"], multiSelect: true);
+        formDoc.Form.SetValue("plan", "pro");
+        formDoc.Form.SetValue("language", "Svenska");
+        formDoc.Form.SetValues("days", ["Mon", "Wed"]);
         foreach (PdfFormField f in PdfReader.Open(formDoc.ToArray()).GetFormFields()) _ = $"{f.Name} = {f.Value}";
 
         // Encryption

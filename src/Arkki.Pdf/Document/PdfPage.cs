@@ -108,6 +108,75 @@ public sealed class PdfPage
         return field;
     }
 
+    /// <summary>
+    /// Adds a radio button of <paramref name="size"/> points square to the group <paramref name="group"/>; the first
+    /// button of a name creates the group, and its buttons can lie on any pages of the document. Choosing a button gives
+    /// the group that button's <paramref name="value"/>, which is a plain name: ASCII letters, digits, '.', '_' and '-'.
+    /// <paramref name="selected"/> chooses this button; <paramref name="readOnly"/> locks the whole group.
+    /// </summary>
+    public PdfFormField AddRadioButton(string group, string value, double x, double y, double size, bool selected = false, bool readOnly = false)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(group);
+        ArgumentException.ThrowIfNullOrEmpty(value);
+        if (value == "Off" || value.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is '.' or '_' or '-')))
+            throw new ArgumentException($"'{value}' cannot be a radio button's value: use ASCII letters, digits, '.', '_' and '-', and not \"Off\".", nameof(value));
+        PdfFormField? field = Document.Form.Find(group);
+        if (field is null)
+        {
+            var g = new RadioGroup(group);
+            field = new PdfFormField(group, PdfFieldKind.RadioButton, "Off", readOnly, g.Options) { Group = g };
+            Document.Form.Add(field);
+        }
+        else if (field.Group is null) throw new ArgumentException($"The form already has a field named '{group}' that is not a radio group created here.", nameof(group));
+        RadioGroup radio = field.Group!;
+        if (radio.Options.Contains(value)) throw new ArgumentException($"Radio group '{group}' already has a button '{value}'.", nameof(value));
+        radio.Options.Add(value);
+        if (readOnly) field.ReadOnly = radio.ReadOnly = true;
+        if (selected) { radio.Value = value; field.Value = value; }
+        _annotations.Add(new RadioButtonAnnotation(this, radio, value, x, y, size));
+        return field;
+    }
+
+    /// <summary>
+    /// Adds a combo box: a drop-down list of <paramref name="options"/> showing <paramref name="value"/>, the chosen
+    /// one (null for none). <paramref name="editable"/> lets the reader also type text that is not an option.
+    /// </summary>
+    public PdfFormField AddComboBox(string name, double x, double y, double width, double height, IEnumerable<string> options,
+        string? value = null, double fontSize = 10, bool editable = false, bool readOnly = false) =>
+        AddChoice(name, x, y, width, height, options, value, fontSize, combo: true, editable, multiSelect: false, readOnly);
+
+    /// <summary>
+    /// Adds a list box showing <paramref name="options"/> with <paramref name="value"/> chosen (null for none). With
+    /// <paramref name="multiSelect"/> the reader can choose several; choose them here with <see cref="PdfForm.SetValues"/>.
+    /// Make the box tall enough for its options: a row is 1.25 times the font size.
+    /// </summary>
+    public PdfFormField AddListBox(string name, double x, double y, double width, double height, IEnumerable<string> options,
+        string? value = null, double fontSize = 10, bool multiSelect = false, bool readOnly = false) =>
+        AddChoice(name, x, y, width, height, options, value, fontSize, combo: false, editable: false, multiSelect, readOnly);
+
+    private PdfFormField AddChoice(string name, double x, double y, double width, double height, IEnumerable<string> options, string? value,
+        double fontSize, bool combo, bool editable, bool multiSelect, bool readOnly)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentOutOfRangeException.ThrowIfNegative(fontSize);
+        string[] list = [.. options];
+        if (list.Any(o => o is null)) throw new ArgumentException("An option is null.", nameof(options));
+        if (list.Distinct().Count() != list.Length) throw new ArgumentException("The options repeat a value.", nameof(options));
+        if (value is not null && !editable && !list.Contains(value))
+            throw new ArgumentException($"'{value}' is not one of the options: {string.Join(", ", list)}.", nameof(value));
+        IReadOnlyList<string> selected = value is null ? [] : [value];
+        var a = new ChoiceFieldAnnotation(this, name, x, y, width, height, list, fontSize, combo, editable, multiSelect, readOnly) { Selected = selected };
+        var field = new PdfFormField(name, PdfFieldKind.Choice, value, readOnly, list)
+        {
+            Created = a, FontSize = fontSize, IsComboBox = combo, IsEditable = combo && editable, IsMultiSelect = multiSelect,
+            Selected = selected,
+        };
+        Document.Form.Add(field);
+        _annotations.Add(a);
+        return field;
+    }
+
     internal double OriginX { get; }
     internal double OriginY { get; }
     internal IReadOnlyList<PageAnnotation> Annotations => _annotations;

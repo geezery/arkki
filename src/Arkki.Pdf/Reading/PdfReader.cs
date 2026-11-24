@@ -148,6 +148,9 @@ public sealed class PdfReader
         return fields;
     }
 
+    /// <summary>More options than any real list has; a hostile file cannot make a field cost more than this.</summary>
+    private const int MaxFieldOptions = 100_000;
+
     private void CollectField(PdfValue node, string? parentName, string? ft, PdfValue? ff, PdfValue? v, List<PdfFormField> fields, HashSet<int> visited, int depth)
     {
         if (depth > 32 || node is not PdfRef nr || !visited.Add(nr.Number) || Resolve(nr) is not PdfDict d) return;
@@ -187,7 +190,13 @@ public sealed class PdfReader
             _ => null,
         };
 
+        // Every chosen option of a list box: /V is then an array of strings.
+        List<string>? selected = kind == PdfFieldKind.Choice && Resolve(v) is PdfArray chosen
+            ? [.. chosen.Items.Take(MaxFieldOptions).Select(Resolve).OfType<PdfString>().Select(s => Internal.PdfSerializer.DecodeText(s.Bytes))]
+            : null;
+
         var options = new List<string>();
+        List<string>? exports = null;
         if (kind is PdfFieldKind.CheckBox or PdfFieldKind.RadioButton)
         {
             foreach (int w in widgets)
@@ -196,11 +205,17 @@ public sealed class PdfReader
         }
         else if (kind == PdfFieldKind.Choice && Resolve(d.Get("Opt")) is PdfArray opt)
         {
-            foreach (PdfValue o in opt.Items)
+            // An option is the text the reader sees, or a pair: the value the form stores, then the text.
+            exports = [];
+            foreach (PdfValue o in opt.Items.Take(MaxFieldOptions))
             {
-                PdfValue? item = Resolve(o) is PdfArray pair && pair.Items.Count == 2 ? Resolve(pair.Items[1]) : Resolve(o);
-                if (item is PdfString os) options.Add(Internal.PdfSerializer.DecodeText(os.Bytes));
+                PdfValue? export = Resolve(o), item = export;
+                if (export is PdfArray pair && pair.Items.Count == 2) (export, item) = (Resolve(pair.Items[0]), Resolve(pair.Items[1]));
+                if (item is not PdfString os) continue;
+                options.Add(Internal.PdfSerializer.DecodeText(os.Bytes));
+                exports.Add(Internal.PdfSerializer.DecodeText((export as PdfString ?? os).Bytes));
             }
+            if (exports.SequenceEqual(options)) exports = null;
         }
 
         double fontSize = 0;
@@ -214,6 +229,10 @@ public sealed class PdfReader
         fields.Add(new PdfFormField(name, kind, value, (flags & 1) != 0, options)
         {
             Reader = this, ObjectNumber = nr.Number, Widgets = widgets, FontSize = fontSize, Multiline = (flags & (1 << 12)) != 0,
+            IsComboBox = kind == PdfFieldKind.Choice && (flags & (1 << 17)) != 0,
+            IsEditable = kind == PdfFieldKind.Choice && (flags & (1 << 17)) != 0 && (flags & (1 << 18)) != 0,
+            IsMultiSelect = kind == PdfFieldKind.Choice && (flags & (1 << 21)) != 0,
+            Exports = exports, Selected = selected,
         });
     }
 
