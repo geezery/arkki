@@ -81,6 +81,34 @@ internal static class RowStyleTests
         double h = table.Layout(300, 500).Fragment!.Height;
         Equal("row styles set padding and height", (style.LineAdvance + 8) + (style.LineAdvance + 2) + (style.LineAdvance + 4) + 40, h);
 
+        // A header style that only sets padding keeps the table's own header fill and rule.
+        static string Rendered(Action<Table> header)
+        {
+            var d = new PdfDocument { Compression = System.IO.Compression.CompressionLevel.NoCompression };
+            var st = new TextStyle(new FontFamily(d.AddFont(TestData.Regular), d.AddFont(TestData.Bold)), 10);
+            var t = new Table([new TableColumn(Len.Star())]) { HeaderBackground = new Color(0.25, 0.5, 0.75), HeaderRule = new Color(0.75, 0.5, 0.25) };
+            header(t);
+            t.SetHeader(t.HeaderStyle!, new TextBlock("A", st));
+            new FlowDocument { Content = t.AddRow(new TextBlock("x", st)) }.RenderTo(d);
+            return System.Text.Encoding.Latin1.GetString(d.ToArray());
+        }
+        string padded = Rendered(t => t.HeaderStyle = new RowStyle(PaddingTop: 4));
+        Check("a header style without a background keeps the table's header fill", padded.Contains("0.25 0.5 0.75 rg"));
+        Check("a header style without a rule keeps the table's header rule", padded.Contains("0.75 0.5 0.25 RG"));
+        string own = Rendered(t => t.HeaderStyle = new RowStyle(Background: new Color(0.125, 0.25, 0.375)));
+        Check("a header style's own background wins", own.Contains("0.125 0.25 0.375 rg") && !own.Contains("0.25 0.5 0.75 rg"));
+
+        // Centred canvas text starts half its width before the centre.
+        static byte[] Drawn(Action<PdfCanvas, PdfFont> draw)
+        {
+            var d = new PdfDocument();
+            PdfFont font = d.AddFont(TestData.Regular);
+            draw(d.AddPage().Canvas, font);
+            return d.ToArray();
+        }
+        Check("centred text is placed by its width", Drawn((c, f) => c.TextCentered(f, 12, 300, 100, "Arkki"))
+            .AsSpan().SequenceEqual(Drawn((c, f) => c.Text(f, 12, 300 - f.Width("Arkki", 12) / 2, 100, "Arkki"))));
+
         // Rows kept with the next ones move to the next page as a group.
         var kept = new Table(columns) { CellPaddingY = 0 };
         for (int i = 0; i < 4; i++) kept.AddRow(i == 2 ? new RowStyle(KeepWithNext: 1, PaddingTop: 0, PaddingBottom: 0) : null, new TextBlock("r" + i, style), new TextBlock("", style));

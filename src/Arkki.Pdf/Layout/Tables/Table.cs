@@ -31,7 +31,10 @@ public sealed class Table : Element
     /// <summary>The header cells, repeated at the top of every page; null for none.</summary>
     public Element[]? Header { get; set; }
 
-    /// <summary>The header row's style. When unset, <see cref="HeaderBackground"/> and <see cref="HeaderRule"/> apply.</summary>
+    /// <summary>
+    /// The header row's style. A background or a rule below that it leaves unset comes from
+    /// <see cref="HeaderBackground"/> and <see cref="HeaderRule"/>.
+    /// </summary>
     public RowStyle? HeaderStyle { get; set; }
     /// <summary>Space left and right inside each cell, in points.</summary>
     public double CellPaddingX { get; set; } = 3;
@@ -114,7 +117,9 @@ public sealed class Table : Element
     }
 
     private RowStyle EffectiveHeaderStyle =>
-        HeaderStyle ?? new RowStyle(Background: HeaderBackground, RuleBelow: HeaderRule, RuleWidth: RuleWidth * 2);
+        HeaderStyle is { } style
+            ? style with { Background = style.Background ?? HeaderBackground, RuleBelow = style.RuleBelow ?? HeaderRule }
+            : new RowStyle(Background: HeaderBackground, RuleBelow: HeaderRule, RuleWidth: RuleWidth * 2);
 
     private RowStyle EffectiveStyle(RowStyle? style) => style ?? new RowStyle(RuleBelow: RowRule, RuleWidth: RuleWidth);
 

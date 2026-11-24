@@ -3,6 +3,19 @@
 All notable changes to Arkki. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [semantic versioning](https://semver.org/).
 
+## [Unreleased]
+
+Found by porting a production invoice from another library to Arkki.
+
+### Added
+
+- `PdfCanvas.TextCentered` draws text centred on a point, next to `Text` and `TextRight`.
+
+### Changed
+
+- A table header's `RowStyle` that sets no background or no rule below now keeps the table's
+  `HeaderBackground` and `HeaderRule`; before, giving the header any style dropped both.
+
 ## [1.0.0-rc.2] - 2026-11-24
 
 Signatures grow from the baseline to the whole of PAdES: visible, long-term, and with keys held elsewhere.

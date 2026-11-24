@@ -116,6 +116,10 @@ public sealed class PdfCanvas
     public void TextRight(PdfFont font, double size, double xRight, double y, ReadOnlySpan<char> text) =>
         Text(font, size, xRight - font.Width(text, size), y, text);
 
+    /// <summary>Draws text centred on <paramref name="xCenter"/>, with its baseline at <paramref name="y"/>.</summary>
+    public void TextCentered(PdfFont font, double size, double xCenter, double y, ReadOnlySpan<char> text) =>
+        Text(font, size, xCenter - font.Width(text, size) / 2, y, text);
+
     /// <summary>Draws text rotated counter-clockwise by <paramref name="degrees"/> around its baseline origin.</summary>
     public void TextRotated(PdfFont font, double size, double x, double y, double degrees, ReadOnlySpan<char> text)
     {

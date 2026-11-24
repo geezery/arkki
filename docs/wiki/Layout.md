@@ -134,6 +134,17 @@ table.AddRow(new RowStyle(Background: Color.Gray(0.9), RuleAbove: Color.Black),
     new TextBlock("Total", bold), new TextBlock("", body), new TextBlock("258,00", bold));
 ```
 
+The header row takes a `RowStyle` too. A background or a rule below that the
+style leaves unset comes from the table's `HeaderBackground` and `HeaderRule`:
+
+```csharp
+var roomy = new Table([new TableColumn(Len.Star())]) { HeaderBackground = Color.Gray(0.95) };
+roomy.SetHeader(new RowStyle(PaddingTop: 4, PaddingBottom: 4), new TextBlock("Item", bold));
+```
+
+Canvas text is placed by its baseline. For text placed by its top edge, add the
+font's ascent: `y + font.Ascent * size`.
+
 ## Rows, columns and boxes
 
 `Column` stacks elements, `Row` puts them side by side, and the extension
@@ -189,6 +200,7 @@ PdfPage page = doc.AddPage(PageSize.A4);
 
 page.Canvas.Text(font, 12, Unit.Mm(20), Unit.Mm(30), "Exactly here");
 page.Canvas.TextRight(font, 12, Unit.Mm(190), Unit.Mm(30), "258,00");
+page.Canvas.TextCentered(font, 12, Unit.Mm(105), Unit.Mm(30), "In the middle");
 page.Canvas.SetStrokeColor(Color.Gray(0.5));
 page.Canvas.Line(Unit.Mm(20), Unit.Mm(34), Unit.Mm(190), Unit.Mm(34));
 page.Canvas.Barcode(new Code128().Encode("A-1187"), Unit.Mm(20), Unit.Mm(40), 150, 36);
