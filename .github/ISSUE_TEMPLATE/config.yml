@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and how-tos
+    url: https://github.com/geezery/arkki/discussions
+    about: Ask how to do something with Arkki, or show what you made.
+  - name: Guides
+    url: https://github.com/geezery/arkki/wiki
+    about: Getting started, layout, forms, signing and troubleshooting live in the wiki.
+  - name: Report a vulnerability
+    url: https://github.com/geezery/arkki/security/advisories/new
+    about: A file that hangs or crashes the reader, or a flaw in encryption or signing. Please report it privately.

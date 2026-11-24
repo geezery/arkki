@@ -5,3 +5,4 @@ samples/output/
 .vs/
 .idea/
 artifacts/
+.transfer/

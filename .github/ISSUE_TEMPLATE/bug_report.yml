@@ -1,0 +1,49 @@
+name: Bug report
+description: A wrong PDF, a file Arkki cannot read, an exception that should not happen.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. A few lines of code that show the problem are worth more than a long description.
+        Please don't attach a PDF that holds personal or confidential data; cut it down or make one that fails the same way.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead? Include the exception and its stack trace if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Code to reproduce
+      description: The smallest program that shows it.
+      render: csharp
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Arkki version
+      placeholder: 1.0.0-rc.1
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: .NET version and operating system
+      placeholder: .NET 10.0.1 on Windows 11 / Ubuntu 24.04 / macOS 26
+    validations:
+      required: true
+  - type: input
+    id: viewer
+    attributes:
+      label: Viewer or tool that shows the problem
+      description: For a PDF that looks wrong or is rejected.
+      placeholder: Adobe Acrobat Reader 2026, Chrome, Preview, qpdf --check…
+  - type: textarea
+    id: file
+    attributes:
+      label: The PDF (optional)
+      description: Drag the file here if you can share it. For a file Arkki cannot read, the producer shown in its properties helps.

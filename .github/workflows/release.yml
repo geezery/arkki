@@ -1,0 +1,103 @@
+name: Release
+
+# Push a tag like v1.0.0 and this builds and tests the tagged source, packs Arkki.Pdf and
+# Arkki.Pdf.Signing with the tag's version, attests their provenance, publishes a GitHub
+# release and pushes the packages to nuget.org.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build, e.g. v1.0.0
+        required: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Version
+        run: |
+          VERSION="${TAG#v}"
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::Tag '$TAG' is not a version like v1.0.0 or v1.0.0-rc.1."; exit 1
+          fi
+          if ! grep -qF "## [$VERSION]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no section for $VERSION. Write it before tagging."; exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # The same validators as CI: a release is checked by qpdf, poppler, pypdf and pyHanko too.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PDF tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qpdf poppler-utils fonts-urw-base35
+          python -m pip install pypdf pyhanko
+
+      - name: Build
+        run: dotnet build Arkki.slnx -c Release -warnaserror -p:ContinuousIntegrationBuild=true -p:Version="$VERSION"
+
+      - name: Test
+        run: dotnet run -c Release --no-build --project tests/Arkki.Tests
+
+      - name: Pack
+        run: |
+          dotnet pack src/Arkki.Pdf -c Release --no-build -p:ContinuousIntegrationBuild=true -p:Version="$VERSION" -o artifacts
+          dotnet pack src/Arkki.Pdf.Signing -c Release --no-build -p:ContinuousIntegrationBuild=true -p:Version="$VERSION" -o artifacts
+          ls -l artifacts
+          test -f "artifacts/Arkki.Pdf.$VERSION.nupkg" && test -f "artifacts/Arkki.Pdf.Signing.$VERSION.nupkg"
+
+      - name: Checksums
+        working-directory: artifacts
+        run: |
+          for f in *.nupkg *.snupkg; do sha256sum "$f" | tee "$f.sha256"; done
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sed "s/VERSION/$VERSION/g" .github/release-notes.md > notes.md
+          PRERELEASE=""
+          case "$VERSION" in *-*) PRERELEASE="--prerelease" ;; esac
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" artifacts/* --clobber
+          else
+            gh release create "$TAG" artifacts/* --title "Arkki $VERSION" --notes-file notes.md --generate-notes --verify-tag $PRERELEASE
+          fi
+
+      # nuget.org needs the maintainer's key in the NUGET_API_KEY secret (RELEASING.md). Without it the
+      # release still has the packages attached; run this workflow again for the tag once the key is set.
+      - name: Push to nuget.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::warning::The NUGET_API_KEY secret is missing: the packages were not pushed to nuget.org. See RELEASING.md."
+            exit 0
+          fi
+          dotnet nuget push "artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate

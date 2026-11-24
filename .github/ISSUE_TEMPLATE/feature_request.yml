@@ -1,0 +1,26 @@
+name: Feature idea
+description: Something a PDF library should do and Arkki does not.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Arkki stays pure managed code with no dependencies in the core package (see CONTRIBUTING.md).
+        The best ideas start from a document you need to produce or read.
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need to do?
+      description: The document or task, not the API you imagine for it.
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: What do you do today?
+      description: A workaround, another library, or nothing.
+  - type: textarea
+    id: api
+    attributes:
+      label: How could it look in code? (optional)
+      render: csharp
