@@ -28,6 +28,7 @@ public sealed class HttpTimestampClient : ITimestampClient
         _url = url;
     }
 
+    /// <inheritdoc />
     public async Task<byte[]> RequestAsync(byte[] timestampRequest, CancellationToken cancellationToken = default)
     {
         using var content = new ByteArrayContent(timestampRequest);

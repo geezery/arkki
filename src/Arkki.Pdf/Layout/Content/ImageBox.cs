@@ -3,6 +3,7 @@ namespace Arkki.Pdf.Layout;
 /// <summary>An image scaled to fit inside a maximum box while keeping its aspect ratio.</summary>
 public sealed class ImageBox(PdfImage image, double maxWidth, double maxHeight, HAlign align = HAlign.Left) : Element
 {
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height)
     {
         double scale = Math.Min(Math.Min(maxWidth, width) / image.Width, maxHeight / image.Height);

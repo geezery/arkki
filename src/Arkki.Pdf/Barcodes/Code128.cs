@@ -8,8 +8,10 @@ namespace Arkki.Pdf.Barcodes;
 /// </summary>
 public sealed class Code128 : IBarcodeSymbology
 {
+    /// <summary>Code 128 symbol values: start code B, start code C and stop.</summary>
     public const int StartB = 104, StartC = 105, Stop = 106;
 
+    /// <inheritdoc />
     public BarcodeMatrix Encode(string text)
     {
         bool setC = text.Length > 0 && text.Length % 2 == 0 && text.All(char.IsAsciiDigit);
@@ -96,6 +98,7 @@ public sealed class Code128 : IBarcodeSymbology
         return modules;
     }
 
+    /// <summary>The width of a bar/space run in modules.</summary>
     public static int TotalModules(ReadOnlySpan<byte> modules)
     {
         int total = 0;

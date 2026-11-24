@@ -36,7 +36,9 @@ public sealed class PdfPage
 
     internal PdfDocument Document { get; }
 
+    /// <summary>Page width in points.</summary>
     public double Width { get; }
+    /// <summary>Page height in points.</summary>
     public double Height { get; }
 
     /// <summary>

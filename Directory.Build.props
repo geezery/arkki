@@ -6,8 +6,16 @@
     <LangVersion>latest</LangVersion>
     <NuGetAudit>false</NuGetAudit>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <Version>0.1.0</Version>
+    <Deterministic>true</Deterministic>
+    <Version>1.0.0-rc.1</Version>
     <Authors>Arkki contributors</Authors>
+    <Copyright>Arkki contributors</Copyright>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+    <PackageTags>pdf;pdf-generation;pdf-forms;pades;digital-signature;layout;cross-platform</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- Tests and samples are not packages; the two libraries opt back in. -->
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 </Project>

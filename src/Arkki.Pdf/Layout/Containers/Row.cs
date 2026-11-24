@@ -5,10 +5,13 @@ public sealed class Row : Element
 {
     private readonly List<(Len Width, Element Child)> _cells = [];
 
+    /// <summary>Horizontal space between cells, in points.</summary>
     public double Spacing { get; init; }
 
+    /// <summary>Adds a cell of the given width: points, millimetres or a share of what is left (<see cref="Len.Star"/>).</summary>
     public Row Add(Len width, Element child) { _cells.Add((width, child)); return this; }
 
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height)
     {
         double[] widths = Len.Resolve(_cells.Select(c => c.Width).ToList(), width - Spacing * Math.Max(0, _cells.Count - 1));

@@ -6,15 +6,25 @@ namespace Arkki.Pdf;
 /// </summary>
 public static class PageSize
 {
+    /// <summary>A0, 841 × 1189 mm.</summary>
     public static readonly (double Width, double Height) A0 = Mm(841, 1189);
+    /// <summary>A1, 594 × 841 mm.</summary>
     public static readonly (double Width, double Height) A1 = Mm(594, 841);
+    /// <summary>A2, 420 × 594 mm.</summary>
     public static readonly (double Width, double Height) A2 = Mm(420, 594);
+    /// <summary>A3, 297 × 420 mm.</summary>
     public static readonly (double Width, double Height) A3 = Mm(297, 420);
+    /// <summary>A4, 210 × 297 mm.</summary>
     public static readonly (double Width, double Height) A4 = Mm(210, 297);
+    /// <summary>A5, 148 × 210 mm.</summary>
     public static readonly (double Width, double Height) A5 = Mm(148, 210);
+    /// <summary>A6, 105 × 148 mm.</summary>
     public static readonly (double Width, double Height) A6 = Mm(105, 148);
+    /// <summary>A7, 74 × 105 mm.</summary>
     public static readonly (double Width, double Height) A7 = Mm(74, 105);
+    /// <summary>B4, 250 × 353 mm.</summary>
     public static readonly (double Width, double Height) B4 = Mm(250, 353);
+    /// <summary>B5, 176 × 250 mm.</summary>
     public static readonly (double Width, double Height) B5 = Mm(176, 250);
 
     /// <summary>Envelope for an unfolded A4 sheet.</summary>
@@ -26,9 +36,13 @@ public static class PageSize
     /// <summary>The DL envelope, for an A4 sheet folded in three.</summary>
     public static readonly (double Width, double Height) DL = Mm(110, 220);
 
+    /// <summary>US Letter, 8.5 × 11 in.</summary>
     public static readonly (double Width, double Height) Letter = (612, 792);
+    /// <summary>US Legal, 8.5 × 14 in.</summary>
     public static readonly (double Width, double Height) Legal = (612, 1008);
+    /// <summary>Tabloid, 11 × 17 in.</summary>
     public static readonly (double Width, double Height) Tabloid = (792, 1224);
+    /// <summary>Executive, 7.25 × 10.5 in.</summary>
     public static readonly (double Width, double Height) Executive = (522, 756);
 
     /// <summary>The size with its longer side horizontal.</summary>

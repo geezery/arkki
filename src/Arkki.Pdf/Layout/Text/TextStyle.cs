@@ -7,8 +7,11 @@ public sealed record TextStyle(FontFamily Family, double Size = 9, bool Bold = f
     private readonly double _size = CheckSize(Size);
     private readonly double _lineHeight = CheckLineHeight(LineHeight);
 
+    /// <summary>The fonts to draw with.</summary>
     public FontFamily Family { get => _family; init => _family = value ?? throw new ArgumentNullException(nameof(Family)); }
+    /// <summary>Font size in points.</summary>
     public double Size { get => _size; init => _size = CheckSize(value); }
+    /// <summary>Line height as a multiple of the size.</summary>
     public double LineHeight { get => _lineHeight; init => _lineHeight = CheckLineHeight(value); }
 
     private static double CheckSize(double v) =>
@@ -17,7 +20,10 @@ public sealed record TextStyle(FontFamily Family, double Size = 9, bool Bold = f
     private static double CheckLineHeight(double v) =>
         double.IsFinite(v) && v > 0 && v <= 100 ? v : throw new ArgumentOutOfRangeException(nameof(LineHeight), v, "The line height must be a positive multiple of the size.");
 
+    /// <summary>The face this style draws with.</summary>
     public PdfFont Font => Family.Select(Bold, Italic);
+    /// <summary>The text colour (black when <see cref="Ink"/> is null).</summary>
     public Color InkColor => Ink ?? Color.Black;
+    /// <summary>Distance from one baseline to the next, in points.</summary>
     public double LineAdvance => Size * LineHeight;
 }

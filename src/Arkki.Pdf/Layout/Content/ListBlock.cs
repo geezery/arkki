@@ -1,7 +1,19 @@
 namespace Arkki.Pdf.Layout;
 
 /// <summary>How a <see cref="ListBlock"/> marks its items.</summary>
-public enum ListMarker { Bullet, Dash, Number, LowerLetter, None }
+public enum ListMarker
+{
+    /// <summary>A bullet (•).</summary>
+    Bullet,
+    /// <summary>An en dash (–).</summary>
+    Dash,
+    /// <summary>1. 2. 3.</summary>
+    Number,
+    /// <summary>a) b) c)</summary>
+    LowerLetter,
+    /// <summary>No marker; the indent stays.</summary>
+    None,
+}
 
 /// <summary>
 /// A bulleted or numbered list with a hanging indent: each item's marker sits in the indent and the item's text
@@ -25,8 +37,11 @@ public sealed class ListBlock : Element
         Style = style; Marker = marker; Indent = indent;
     }
 
+    /// <summary>The style of the markers and of items added as text.</summary>
     public TextStyle Style { get; }
+    /// <summary>How items are marked.</summary>
     public ListMarker Marker { get; }
+    /// <summary>Width of the marker column in points.</summary>
     public double Indent { get; }
 
     /// <summary>Vertical space between items, in points.</summary>
@@ -38,6 +53,7 @@ public sealed class ListBlock : Element
     /// <summary>Alignment of items added as text.</summary>
     public HAlign Align { get; init; }
 
+    /// <summary>The items, in order.</summary>
     public IReadOnlyList<Element> Items => _items;
 
     /// <summary>Adds an item in the list's style.</summary>
@@ -70,6 +86,7 @@ public sealed class ListBlock : Element
         return s;
     }
 
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height)
     {
         // A nested list is indented under the item before it, with no marker or number of its own.

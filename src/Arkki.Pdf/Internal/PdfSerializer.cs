@@ -8,8 +8,11 @@ internal static class PdfSerializer
 {
     public const int MaxDepth = 256;
 
+    /// <param name="b">Where the bytes go.</param>
+    /// <param name="value">The value to write.</param>
     /// <param name="mapRef">Turns a reference of the read file into the text written for it ("12 0 R" or "null").</param>
     /// <param name="transformString">Applied to every string's bytes, for encryption; null keeps them.</param>
+    /// <param name="depth">How deep the value is nested, to refuse hostile nesting.</param>
     public static void Write(ByteBuf b, PdfValue value, Func<PdfRef, string> mapRef, Func<byte[], byte[]>? transformString = null, int depth = 0)
     {
         if (depth > MaxDepth) throw new InvalidDataException("Objects are nested too deeply.");

@@ -3,6 +3,7 @@ namespace Arkki.Pdf.Layout;
 /// <summary>A horizontal rule across the available width.</summary>
 public sealed class Rule(Color color, double thickness = 0.5) : Element
 {
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height) =>
         thickness > height ? LayoutResult.None(this) : LayoutResult.Full(new RuleFragment(color, thickness, width));
 

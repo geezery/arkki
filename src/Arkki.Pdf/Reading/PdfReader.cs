@@ -5,9 +5,9 @@ namespace Arkki.Pdf.Reading;
 /// <summary>
 /// Reads an existing PDF file so that its pages can be imported into a <see cref="PdfDocument"/>.
 /// Supports cross-reference tables and streams, object streams, incremental updates, and
-/// rebuilds a damaged cross-reference by scanning the file. Encrypted files are rejected.
-/// A reader is immutable after <see cref="Open(byte[])"/> apart from an internal object cache,
-/// and is not thread-safe.
+/// rebuilds a damaged cross-reference by scanning the file. Encrypted files open with their user or owner
+/// password. A reader is immutable after <see cref="Open(byte[], string?)"/> apart from an internal object cache,
+/// so one reader is used by one thread at a time.
 /// </summary>
 public sealed class PdfReader
 {
@@ -24,6 +24,7 @@ public sealed class PdfReader
     /// <summary>The version from the file header, for example "1.7".</summary>
     public string Version { get; private set; } = "1.4";
 
+    /// <summary>Number of pages.</summary>
     public int PageCount => _pages.Count;
 
     /// <summary>Page size in points, as the page's crop box (falling back to its media box) gives it, before rotation.</summary>
@@ -68,6 +69,7 @@ public sealed class PdfReader
         return reader;
     }
 
+    /// <summary>Reads a PDF from a stream (read to its end).</summary>
     public static PdfReader Open(Stream stream, string? password = null)
     {
         ArgumentNullException.ThrowIfNull(stream);

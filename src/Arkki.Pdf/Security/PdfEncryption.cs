@@ -7,15 +7,25 @@ namespace Arkki.Pdf;
 [Flags]
 public enum PdfPermissions
 {
+    /// <summary>No permissions.</summary>
     None = 0,
+    /// <summary>Print.</summary>
     Print = 1 << 2,
+    /// <summary>Change the content.</summary>
     Modify = 1 << 3,
+    /// <summary>Copy text and images.</summary>
     Copy = 1 << 4,
+    /// <summary>Add comments and fill forms.</summary>
     Annotate = 1 << 5,
+    /// <summary>Fill forms.</summary>
     FillForms = 1 << 8,
+    /// <summary>Extract content for accessibility tools.</summary>
     ExtractForAccessibility = 1 << 9,
+    /// <summary>Insert, rotate and delete pages.</summary>
     Assemble = 1 << 10,
+    /// <summary>Print at full quality.</summary>
     PrintHighQuality = 1 << 11,
+    /// <summary>Everything.</summary>
     All = Print | Modify | Copy | Annotate | FillForms | ExtractForAccessibility | Assemble | PrintHighQuality,
 }
 
@@ -26,6 +36,7 @@ public enum PdfPermissions
 /// </summary>
 public sealed class PdfEncryption
 {
+    /// <summary>Encryption with a user password (may be empty: the file opens without one) and an owner password (random when null) that lifts the restrictions.</summary>
     public PdfEncryption(string userPassword, string? ownerPassword = null, PdfPermissions permissions = PdfPermissions.All)
     {
         ArgumentNullException.ThrowIfNull(userPassword);
@@ -34,11 +45,13 @@ public sealed class PdfEncryption
         Permissions = permissions;
     }
 
+    /// <summary>The password that opens the file.</summary>
     public string UserPassword { get; }
 
     /// <summary>Null makes a random one: nobody can then lift the permissions.</summary>
     public string? OwnerPassword { get; }
 
+    /// <summary>What a user who opened the file with the user password may do.</summary>
     public PdfPermissions Permissions { get; }
 
     /// <summary>Encrypt the XMP metadata too (default). Search tools can index unencrypted metadata.</summary>

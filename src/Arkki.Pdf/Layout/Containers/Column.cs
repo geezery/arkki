@@ -3,14 +3,20 @@ namespace Arkki.Pdf.Layout;
 /// <summary>Stacks children vertically. Splits between (and inside) children at page breaks.</summary>
 public sealed class Column : Element
 {
+    /// <summary>A column of the given children, top to bottom.</summary>
     public Column(params Element[] children) => Children = [.. children];
+    /// <summary>A column of the given children, top to bottom.</summary>
     public Column(IEnumerable<Element> children) => Children = [.. children];
 
+    /// <summary>The children, top to bottom.</summary>
     public List<Element> Children { get; }
+    /// <summary>Vertical space between children, in points.</summary>
     public double Spacing { get; init; }
 
+    /// <summary>Adds a child at the bottom.</summary>
     public Column Add(Element child) { Children.Add(child); return this; }
 
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height)
     {
         var placed = new List<(Fragment Fragment, double Y)>();

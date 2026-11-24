@@ -7,8 +7,11 @@ namespace Arkki.Pdf.Layout;
 /// </summary>
 public sealed class FlowDocument
 {
+    /// <summary>Page width in points (A4 by default).</summary>
     public double PageWidth { get; init; } = PageSize.A4.Width;
+    /// <summary>Page height in points (A4 by default).</summary>
     public double PageHeight { get; init; } = PageSize.A4.Height;
+    /// <summary>Space between the page edge and the content.</summary>
     public Margins Margins { get; init; } = Margins.Mm(20, 15, 15, 15);
 
     /// <summary>Builds the header for a page. Its height must not depend on <see cref="PageContext.PageCount"/>.</summary>
@@ -17,6 +20,7 @@ public sealed class FlowDocument
     /// <summary>Builds the footer for a page. Its height must not depend on <see cref="PageContext.PageCount"/>.</summary>
     public Func<PageContext, Element?>? Footer { get; init; }
 
+    /// <summary>What flows over the pages.</summary>
     public required Element Content { get; init; }
 
     /// <summary>Gap between header and content, and between content and footer.</summary>
@@ -36,6 +40,7 @@ public sealed class FlowDocument
 
     private sealed record PagePlan(Fragment? Content, double ContentTop);
 
+    /// <summary>Lays out the content and adds as many pages to <paramref name="document"/> as it needs.</summary>
     public void RenderTo(PdfDocument document)
     {
         double contentWidth = PageWidth - Margins.Left - Margins.Right;

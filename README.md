@@ -1,29 +1,32 @@
 # Arkki
 
-Fast, dependency-free PDF generation for .NET, written in C#. No browser engine, no native
-binaries, no NuGet dependencies. Licensed under the Mozilla Public License 2.0.
+PDF for .NET, written in C#: create documents with a paginating layout engine, open and edit existing
+files, fill and create forms, encrypt, and sign. Pure managed code that runs the same on Windows, Linux and
+macOS: no System.Drawing, no native binaries, no browser engine. The core package has no dependencies;
+signing adds only Microsoft's `System.Security.Cryptography.Pkcs`. Licensed under the Mozilla Public
+License 2.0.
 
-> Working name. Status: early (0.1). The library is `Arkki.Pdf`: a general-purpose PDF writer
-> and layout engine with no knowledge of any particular document type. The first milestone,
-> proving that it can reproduce a regulated form exactly, is a sample: a multi-page Finvoice
-> invoice with a logo, the Finnish bank barcode and the credit transfer form. See
-> [`docs/sample-invoice.pdf`](docs/sample-invoice.pdf).
-
-## What is in the box
-
-| Project | Contents |
+| Package | Contents |
 |---|---|
-| `src/Arkki.Pdf` | The library. PDF writer, TrueType embedding with subsetting, PNG/JPEG images, vector barcodes (Code 128, EAN-13, QR code), an immediate-mode canvas and a paginating layout engine |
-| `samples/Arkki.Samples.Finvoice` | Sample, not shipped. Finvoice 3.0 reader, IBAN and reference validation, bank barcode, credit transfer form and an invoice renderer. Copy it into your application and adapt it |
-| `samples/Arkki.Samples.Invoice` | Console program that renders the sample invoice and times it |
+| `Arkki.Pdf` | Writer, layout engine, TrueType/OpenType fonts, PNG/JPEG images, barcodes, reader, merging, page operations, stamping, forms, links, bookmarks, attachments, encryption |
+| `Arkki.Pdf.Signing` | PAdES digital signatures (B-B, B-T with an RFC 3161 timestamp) and their verification |
 
-## Quick start
+Requires .NET 10.
 
-A document is a tree of layout elements rendered onto pages:
+## Create a document
+
+A document is a tree of layout elements that flows onto as many pages as it needs:
 
 ```csharp
+using Arkki.Pdf;
+using Arkki.Pdf.Barcodes;
+using Arkki.Pdf.Layout;
+using Arkki.Pdf.Reading;
+
 var doc = new PdfDocument();
-var fonts = new FontFamily(doc.AddFont(regular), doc.AddFont(bold));
+doc.Info.Title = "Order 1187";
+var fonts = new FontFamily(doc.AddFont(File.ReadAllBytes("Inter-Regular.ttf")),
+                           doc.AddFont(File.ReadAllBytes("Inter-Bold.ttf")));
 var body = new TextStyle(fonts, 10);
 
 var table = new Table([new TableColumn(Len.Star()), new TableColumn(Len.Mm(30), HAlign.Right)])
@@ -32,124 +35,173 @@ table.AddRow(body, "Machining", "258,00");
 
 new FlowDocument
 {
+    PageWidth = PageSize.A4.Width, PageHeight = PageSize.A4.Height,   // A4 is the default
     Header = page => new TextBlock($"Page {page.PageNumber} ({page.PageCount})", body, HAlign.Right),
-    Content = new Column(new TextBlock("Hello", body with { Size = 18, Bold = true }), table.Padding(4)),
+    Content = new Column(
+        new TextBlock("Order 1187", body with { Size = 18, Bold = true }),
+        new TextBlock("Long terms of delivery that wrap and are justified …", body, HAlign.Justify),
+        new ListBlock(body, ListMarker.Number).Add("Check the parts").Add("Book the time"),
+        table) { Spacing = 8 },
 }.RenderTo(doc);
 
-doc.Save(stream);
+using var file = File.Create("order.pdf");
+doc.Save(file);              // or doc.ToArray()
 ```
 
-Paragraphs can mix styles, and a row with a left and a right aligned block does what a right
-tab stop does in a word processor:
+Text and layout:
+
+- Paragraphs mix styles: `new TextBlock([new("Due ", body), new("7.12.2026", body with { Bold = true })])`.
+- Left, right, centred and justified text. Soft hyphens (U+00AD) and a compound's own hyphen are break points;
+  plug in language rules with `IHyphenator` (no dictionaries ship with Arkki).
+- Bulleted, numbered and lettered lists with hanging indents and nesting (`ListBlock`).
+- Tables with headers repeated on each page, column spans, cell fills and borders, row styles.
+- `Row`, `Column`, `Box`, padding, `KeepTogether`, `KeepWithNext`, `PageBreak`, images and barcodes in the flow.
+- Italic needs its own font file: `new FontFamily(regular, bold, Italic: italic, BoldItalic: boldItalic)`.
+
+Paper sizes: `PageSize.A0`–`A7`, `B4`, `B5`, `C4`–`C6`, `DL`, `Letter`, `Legal`, `Tabloid`, `Executive`,
+`PageSize.Landscape(PageSize.A4)`, or any size with `PageSize.Mm(w, h)`.
+
+The canvas draws directly when you need exact positions:
 
 ```csharp
-var due = new TextBlock([new("Due ", body), new("7.12.2026", body with { Bold = true })]);
-var line = new Row().Add(Len.Star(), new TextBlock("Invoice 1187", body))
-                    .Add(Len.Star(), new TextBlock("Page 1 (3)", body, HAlign.Right));
+PdfPage page = doc.AddPage(PageSize.A4);
+page.Canvas.Text(font, 12, Unit.Mm(20), Unit.Mm(30), "Exactly here");
+page.Canvas.Barcode(new Code128().Encode("A-1187"), x, y, width, height);
+page.AddLink(x, y, 100, 14, new Uri("https://example.com"));
 ```
 
-Italic needs its own font file: `new FontFamily(regular, bold, Italic: italic, BoldItalic: boldItalic)`.
-Without one, italic text falls back to the upright face.
+## Fonts and images
 
-A table cell can cover several columns, and a `PageBreak` starts a new page:
+- TrueType fonts are embedded as subsets of the glyphs used. OpenType fonts with CFF outlines (.otf) are
+  embedded whole. A `TrueTypeFont` is parsed once and can be shared by any number of documents and threads.
+- PNG (with transparency as a soft mask) and JPEG. PNGs are stored in the cheapest lossless form;
+  `PdfImage.Load(data, maxPixelWidth, maxPixelHeight)` shrinks one larger than it prints.
+- Barcodes: Code 128, EAN-13 and QR code as vector rectangles; others plug in through `IBarcodeSymbology`.
 
-```csharp
-table.AddRow(new TextBlock("Parts", body with { Bold = true }).SpanColumns(2));
-var report = new Column(balanceSheet, new PageBreak(), incomeStatement);
-```
-
-## Barcodes
-
-Code 128, EAN-13 and QR code are built in. A barcode is a grid of modules drawn as vector
-rectangles; `BarcodeBox` sizes it in a layout and keeps the quiet zone scanners need:
+## Open, edit and merge existing PDFs
 
 ```csharp
-using Arkki.Pdf.Barcodes;
+var doc = PdfDocument.Open(File.ReadAllBytes("contract.pdf"));
 
-var qr = new BarcodeBox(new QrCode(QrErrorCorrection.M), "https://example.com/contracts/7", Unit.Mm(20), Unit.Mm(20));
-var ean = new BarcodeBox(new Ean13(), "400638133393", Unit.Mm(37), Unit.Mm(20));
-canvas.Barcode(new Code128().Encode("A-1187"), x, y, width, height);   // without quiet zone
-```
+// Stamp: draw over an existing page.
+PdfCanvas c = doc.Pages[0].Canvas;
+c.Save(); c.SetOpacity(0.2); c.TextRotated(font, 60, 150, 500, 45, "DRAFT"); c.Restore();
 
-Other symbologies plug in by implementing `IBarcodeSymbology`, which turns text into a
-`BarcodeMatrix`. The digits under an EAN-13 are not drawn; set them as text where they belong.
+// Pages: insert, remove, move, rotate.
+doc.RemovePageAt(3);
+doc.MovePage(0, 2);
+doc.Pages[1].Rotation = 90;
 
-## Merging PDF files
+// Bookmarks and attachments.
+doc.Outline.Add("Terms", doc.Pages[1]);
+doc.Attach("order.xml", File.ReadAllBytes("order.xml"), "application/xml");
 
-```csharp
-using Arkki.Pdf.Reading;
+File.WriteAllBytes("stamped.pdf", doc.ToArray());
 
-// Whole files, in order. Pages are copied, not re-rendered.
 byte[] batch = PdfDocument.Merge(invoicePdfs).ToArray();
-
-// Or pick pages, from files written by any producer.
-var doc = new PdfDocument();
-doc.ImportPages(PdfReader.Open(File.ReadAllBytes("agreement.pdf")));
-doc.ImportPage(PdfReader.Open(File.ReadAllBytes("appendix.pdf")), 0);
+PdfDocument firstTwo = PdfDocument.ExtractPages(pdf, 0, 1);
 ```
 
-`PdfReader.ExtractText(page)` returns a page's text, for tests that assert on what a reader sees.
-The reader handles cross-reference tables and streams, object streams, incremental updates and
-damaged cross-references. Encrypted files are rejected.
+The reader (`PdfReader`) handles cross-reference tables and streams, object streams, incremental updates,
+damaged cross-references (rebuilt by scanning) and encrypted files (RC4 40/128-bit, AES-128, AES-256 with a
+user or owner password). It extracts text (`ExtractText`) and reads metadata (`Info`).
 
-## Small files
-
-- Fonts are subset to the glyphs a document uses.
-- PNG images are stored losslessly in the cheapest form that fits: grey instead of RGB, a palette
-  for up to 256 colours, PNG row prediction when it helps, and no soft mask for opaque alpha.
-  `PdfImage.Load(data, maxPixelWidth, maxPixelHeight)` shrinks an image larger than it will
-  print; at 300 dpi a 60 mm wide logo needs about 710 pixels. JPEG data is embedded as is.
-- An image is embedded once however many pages show it.
-- Merging stores identical objects once, so a batch of invoices with the same logo carries the
-  logo once, and streams that a producer left uncompressed are compressed.
-
-## The invoice sample
+## Forms
 
 ```csharp
-using Arkki.Pdf;
-using Arkki.Pdf.Fonts;
-using Arkki.Samples.Finvoice;
+// Fill an existing form by its field names.
+var doc = PdfDocument.Open(File.ReadAllBytes("application.pdf"));
+doc.Form.SetValue("customer.name", "Maija Meikäläinen");
+doc.Form.SetChecked("agree", true);
 
-// Parse fonts and the logo once; they are immutable and shared by all renders and threads.
-var theme = new InvoiceTheme
-{
-    RegularFont = TrueTypeFont.Load(File.ReadAllBytes("LiberationSans-Regular.ttf")),
-    BoldFont = TrueTypeFont.Load(File.ReadAllBytes("LiberationSans-Bold.ttf")),
-    Logo = PdfImage.Load(File.ReadAllBytes("logo.png")),
-};
+// Or create fields.
+PdfPage page = doc.AddPage();
+page.AddTextField("email", x: 50, y: 100, width: 200, height: 18);
+page.AddCheckBox("newsletter", x: 50, y: 130, size: 12);
 
-FinvoiceInvoice invoice = FinvoiceReader.Load("invoice.xml");
-File.WriteAllBytes("invoice.pdf", FinvoiceRenderer.RenderToArray(invoice, theme));
+// Read the fields of any file.
+foreach (PdfFormField f in PdfReader.Open(pdf).GetFormFields()) Console.WriteLine($"{f.Name} = {f.Value}");
 ```
 
-Its labels are Finnish by default and are loaded from JSON
-(`samples/Arkki.Samples.Finvoice/Invoices/invoice-texts-fi.json`), so another language is one
-file passed to `InvoiceTexts.Load` and set as `InvoiceTheme.Texts`.
+Text fields, check boxes, radio buttons and choice fields are read; text fields and check boxes are filled and
+created. Filled fields get new appearance streams, so they show in every viewer.
 
-## Build, test, run
+## Encryption
 
-Requires the .NET 10 SDK. Nothing is restored from NuGet.
+```csharp
+doc.Encryption = new PdfEncryption(userPassword: "open", ownerPassword: "owner",
+    permissions: PdfPermissions.Print | PdfPermissions.Copy);
+var reader = PdfReader.Open(bytes, password: "open");
+```
+
+Arkki writes AES-256 (PDF 2.0, revision 6) and reads every standard security handler revision.
+
+## Digital signatures (`Arkki.Pdf.Signing`)
+
+```csharp
+using Arkki.Pdf.Signing;
+
+X509Certificate2 cert = X509CertificateLoader.LoadPkcs12FromFile("signer.p12", password);
+byte[] signed = PdfSigner.Sign(pdf, cert, new PdfSignatureOptions { Reason = "Approved", Location = "Helsinki" });
+
+// PAdES B-T: the signature is timestamped by an RFC 3161 authority.
+byte[] stamped = await PdfSigner.SignAsync(pdf, cert, new PdfSignatureOptions
+{
+    Timestamp = new HttpTimestampClient(httpClient, new Uri("https://tsa.example.com")),
+});
+
+foreach (PdfSignatureInfo s in PdfSignatureVerifier.Verify(stamped, trustedRoots))
+    Console.WriteLine($"{s.FieldName}: intact {s.IsIntact}, whole {s.CoversWholeDocument}, {s.Level}, trusted {s.ChainTrusted}");
+```
+
+The signature is an invisible field appended as an incremental update, so earlier signatures stay valid.
+RSA and ECDSA keys, SHA-256/384/512. A viewer shows a signature as trusted when the certificate comes from a
+CA it trusts (for Adobe, the AATL or EU trusted lists); a certificate you issued yourself gives a valid but
+untrusted signature. Not included: visible signature appearances, long-term validation data (B-LT/B-LTA),
+revocation checking, and signing with an external device or service.
+
+## Platforms and threads
+
+- Windows, Linux and macOS: everything is managed code on .NET's own APIs. Fonts are loaded
+  from bytes you pass in; Arkki never looks for system fonts.
+- Fonts (`TrueTypeFont`) and images (`PdfImage`) are immutable and safe to share across threads. A
+  `PdfDocument` or a `PdfReader` is used by one thread at a time; build documents in parallel freely.
+- Output is deterministic: the same input gives the same bytes.
+
+## Performance and size
+
+A 50 000-row table lays out to 1 021 pages in about 1.2 s and 1.5 MB on a two-core cloud VM. The three-page
+sample invoice renders in about 5 ms at roughly 100 kB including the logo and two subset fonts. Fonts are
+subset, images embedded once, and merging stores identical objects once.
+
+## Robustness
+
+Bad arguments fail at once with `ArgumentException` and its kin. A file that cannot be read fails with
+`InvalidDataException` (damaged), `PdfPasswordException` (wrong password) or `NotSupportedException`
+(a feature Arkki does not read), never with another exception or a hang. The test suite mutates every sample
+file thousands of times and tries hand-made traps: deep nesting, reference cycles, huge counts and lengths,
+and a decompression bomb (streams decoding past 256 MB are refused).
+
+## Not included
+
+Tagged PDF / PDF/UA, PDF/A, right-to-left and complex-script shaping (Arabic, Indic), rendering pages to
+images, SVG, and CFF font subsetting.
+
+## Build and test
 
 ```
 dotnet build Arkki.slnx -c Release
 dotnet run -c Release --project tests/Arkki.Tests
-dotnet run -c Release --project samples/Arkki.Samples.Invoice
 ```
 
-The sample writes `samples/output/invoice.pdf` and prints a render time. On a two-core cloud VM the
-three-page, 44-row sample invoice takes about 2 ms with `CompressionLevel.Fastest` and about 5 ms
-with `Optimal`, single-threaded, at roughly 100 kB including the logo and two subset fonts.
+The tests run anywhere; where `qpdf`, poppler (`pdftotext`, `pdfinfo`, `pdftoppm`, `pdfsig`, `pdffonts`),
+Python with `pypdf` and `pyHanko` are installed, every generated file is also checked by them (CI installs
+them on Linux). `ARKKI_FUZZ_ITERATIONS` and `ARKKI_FUZZ_SEED` widen the fuzz run.
 
-## Verification
-
-- `tests/Arkki.Tests` reads and merges files written by Ghostscript, LibreOffice, qpdf and pypdf
-  (see `tests/Arkki.Tests/Data/Pdf`), checks file sizes, and checks all 18 worked examples of Finance Finland's Bank Bar Code Guide 5.3,
-  reference and IBAN validation, the Finvoice reader (UTF-8 and ISO-8859-15), deterministic
-  output and parallel rendering.
-- `tools/measure_giro.py` renders the form at 600 dpi and measures every line and the barcode
-  against the specification. See [`docs/DESIGN.md`](docs/DESIGN.md) for the numbers.
+The `samples` folder shows a complete Finnish Finvoice invoice with the bank barcode and the credit transfer
+form; it is an example to copy, not part of the library.
 
 ## License
 
-MPL-2.0, see [`LICENSE`](LICENSE). The Liberation Sans fonts under `samples/fonts` are
-licensed separately under the SIL Open Font License 1.1.
+MPL-2.0, see [`LICENSE`](LICENSE). The Liberation Sans fonts under `samples/fonts` are licensed separately
+under the SIL Open Font License 1.1. See [`CHANGELOG.md`](CHANGELOG.md) for what changed.

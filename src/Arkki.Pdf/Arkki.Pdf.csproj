@@ -1,8 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsAotCompatible>true</IsAotCompatible>
-    <Description>Fast, dependency-free PDF generation for .NET: writer, TrueType embedding, images, barcodes and a paginating layout engine.</Description>
+    <Description>PDF for .NET in pure managed code with no dependencies: a paginating layout engine, TrueType/OpenType fonts, images, barcodes, reading, merging, stamping, forms, links, bookmarks, attachments and AES-256 encryption. Windows, Linux and macOS.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="/" Visible="false" />
+  </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Arkki.Tests" />
     <InternalsVisibleTo Include="Arkki.Pdf.Signing" />

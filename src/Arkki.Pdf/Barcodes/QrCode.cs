@@ -2,7 +2,18 @@ using System.Text;
 
 namespace Arkki.Pdf.Barcodes;
 
-public enum QrErrorCorrection { L, M, Q, H }
+/// <summary>How much of a QR code may be damaged and still read; higher levels make a larger symbol.</summary>
+public enum QrErrorCorrection
+{
+    /// <summary>About 7 % may be damaged.</summary>
+    L,
+    /// <summary>About 15 % may be damaged.</summary>
+    M,
+    /// <summary>About 25 % may be damaged.</summary>
+    Q,
+    /// <summary>About 30 % may be damaged.</summary>
+    H,
+}
 
 /// <summary>
 /// QR code encoder (ISO/IEC 18004), versions 1 to 40. The text goes in one segment: numeric or
@@ -31,8 +42,10 @@ public sealed class QrCode(QrErrorCorrection level = QrErrorCorrection.M) : IBar
         [0, 1, 1, 2, 4, 4, 4, 5, 6, 8, 8, 11, 11, 16, 16, 18, 16, 19, 21, 25, 25, 25, 34, 30, 32, 35, 37, 40, 42, 45, 48, 51, 54, 57, 60, 63, 66, 70, 74, 77, 81],
     ];
 
+    /// <summary>The error correction level: how much of the symbol may be damaged and still read.</summary>
     public QrErrorCorrection Level { get; } = level;
 
+    /// <inheritdoc />
     public BarcodeMatrix Encode(string text)
     {
         var (mode, data, count) = Segment(text);

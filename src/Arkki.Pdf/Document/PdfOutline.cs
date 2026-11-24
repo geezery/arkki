@@ -11,7 +11,9 @@ public sealed class PdfBookmark
         Title = title; Page = page; Top = top;
     }
 
+    /// <summary>The text shown in the viewer's bookmark panel.</summary>
     public string Title { get; }
+    /// <summary>The page the bookmark opens; null for a heading that only groups others.</summary>
     public PdfPage? Page { get; }
 
     /// <summary>Points from the top of the page that the bookmark scrolls to.</summary>
@@ -20,6 +22,7 @@ public sealed class PdfBookmark
     /// <summary>True to show the bookmark's children when the document opens.</summary>
     public bool Open { get; set; }
 
+    /// <summary>Nested bookmarks.</summary>
     public IReadOnlyList<PdfBookmark> Children => _children;
 
     /// <summary>Adds a bookmark under this one.</summary>
@@ -37,6 +40,7 @@ public sealed class PdfOutline
 {
     private readonly List<PdfBookmark> _items = [];
 
+    /// <summary>The top-level bookmarks.</summary>
     public IReadOnlyList<PdfBookmark> Items => _items;
 
     /// <summary>Adds a top-level bookmark to <paramref name="page"/>, <paramref name="top"/> points from its top.</summary>
@@ -59,8 +63,12 @@ public sealed class PdfAttachment
         Name = name; Data = data; MimeType = mimeType; Description = description;
     }
 
+    /// <summary>The file name shown in the viewer.</summary>
     public string Name { get; }
+    /// <summary>The file's contents.</summary>
     public byte[] Data { get; }
+    /// <summary>The MIME type, such as application/xml.</summary>
     public string? MimeType { get; }
+    /// <summary>A description shown with the attachment.</summary>
     public string? Description { get; }
 }

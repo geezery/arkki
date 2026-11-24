@@ -16,6 +16,7 @@ namespace Arkki.Pdf;
 /// </summary>
 public sealed class PdfDocument
 {
+    /// <summary>The /Producer written into every document's metadata.</summary>
     public const string Producer = "Arkki 1.0";
 
     private readonly List<PdfPage> _pages = [];
@@ -24,12 +25,15 @@ public sealed class PdfDocument
     private readonly List<PdfAttachment> _attachments = [];
     private readonly List<double> _opacities = [];
 
+    /// <summary>Title, author and the other metadata written to the file.</summary>
     public PdfInfo Info { get; } = new();
+    /// <summary>The pages in order.</summary>
     public IReadOnlyList<PdfPage> Pages => _pages;
 
     /// <summary>Natural language of the document as a BCP 47 tag, e.g. "fi-FI".</summary>
     public string? Language { get; set; }
 
+    /// <summary>How hard content streams and fonts are compressed: Optimal (default) or Fastest for speed.</summary>
     public CompressionLevel Compression { get; set; } = CompressionLevel.Optimal;
 
     /// <summary>
@@ -50,6 +54,7 @@ public sealed class PdfDocument
     /// <summary>Password protection and permissions; null (default) saves the file unencrypted.</summary>
     public PdfEncryption? Encryption { get; set; }
 
+    /// <summary>Adds a font to the document; only the glyphs used are embedded.</summary>
     public PdfFont AddFont(TrueTypeFont face)
     {
         ArgumentNullException.ThrowIfNull(face);
@@ -58,6 +63,7 @@ public sealed class PdfDocument
         return font;
     }
 
+    /// <summary>Parses a .ttf or .otf file and adds it. Parse once with <see cref="Fonts.TrueTypeFont.Load"/> to share a font between documents.</summary>
     public PdfFont AddFont(byte[] trueTypeData) => AddFont(TrueTypeFont.Load(trueTypeData));
 
     /// <summary>Embeds a file in the document. Viewers list it among the document's attachments.</summary>
@@ -86,6 +92,7 @@ public sealed class PdfDocument
 
     // ---- Pages -------------------------------------------------------------------------------
 
+    /// <summary>Adds a page of the given size in points.</summary>
     public PdfPage AddPage(double width, double height)
     {
         var page = new PdfPage(this, width, height);
@@ -96,6 +103,7 @@ public sealed class PdfDocument
     /// <summary>Adds a page of the given size, such as <see cref="PageSize.A4"/> or <c>PageSize.Landscape(PageSize.A5)</c>.</summary>
     public PdfPage AddPage((double Width, double Height) size) => AddPage(size.Width, size.Height);
 
+    /// <summary>Adds an A4 page.</summary>
     public PdfPage AddPage() => AddPage(PageSize.A4);
 
     /// <summary>Inserts a new page at <paramref name="index"/> (zero-based); the pages from there on move one down.</summary>
@@ -159,6 +167,7 @@ public sealed class PdfDocument
     /// Opens an existing PDF for changes: every page is imported (and can be drawn on), along with the document
     /// information, the language and the form fields. Save writes a new file; the input is not changed.
     /// </summary>
+    /// <param name="pdf">The file's bytes.</param>
     /// <param name="password">The user or owner password of an encrypted file.</param>
     public static PdfDocument Open(byte[] pdf, string? password = null)
     {
@@ -207,6 +216,7 @@ public sealed class PdfDocument
 
     // ---- Saving ------------------------------------------------------------------------------
 
+    /// <summary>Writes the document and returns its bytes.</summary>
     public byte[] ToArray()
     {
         using var ms = new MemoryStream(64 * 1024);
@@ -214,6 +224,7 @@ public sealed class PdfDocument
         return ms.ToArray();
     }
 
+    /// <summary>Writes the document to <paramref name="output"/>, which stays open.</summary>
     public void Save(Stream output)
     {
         ArgumentNullException.ThrowIfNull(output);

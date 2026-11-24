@@ -21,6 +21,7 @@ public sealed class PdfFont
         _scale = 1.0 / face.UnitsPerEm;
     }
 
+    /// <summary>The parsed font file this font embeds.</summary>
     public TrueTypeFont Face { get; }
     internal string ResourceName { get; }
 
@@ -30,6 +31,7 @@ public sealed class PdfFont
     /// <summary>Descent below the baseline for a font size of 1 (negative).</summary>
     public double Descent => Face.Descender * _scale;
 
+    /// <summary>Height of capital letters at size 1.</summary>
     public double CapHeight => Face.CapHeight * _scale;
 
     /// <summary>Width of <paramref name="text"/> in points at the given font size.</summary>

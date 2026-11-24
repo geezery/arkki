@@ -7,5 +7,6 @@ namespace Arkki.Pdf.Layout;
 /// </summary>
 public abstract class Element
 {
+    /// <summary>Lays the element out in the space offered (points). Returns what fits as a fragment and, when not all of it fits, the rest to continue on the next page.</summary>
     public abstract LayoutResult Layout(double width, double height);
 }

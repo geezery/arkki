@@ -3,17 +3,27 @@ namespace Arkki.Pdf.Layout;
 /// <summary>Padding, background and border around a child.</summary>
 public sealed class Box : Element
 {
+    /// <summary>Wraps <paramref name="child"/> in a box with no padding, fill or border.</summary>
     public Box(Element child) => Child = child;
 
+    /// <summary>The boxed element.</summary>
     public Element Child { get; }
+    /// <summary>Space left of the child, in points.</summary>
     public double Left { get; init; }
+    /// <summary>Space above the child, in points.</summary>
     public double Top { get; init; }
+    /// <summary>Space right of the child, in points.</summary>
     public double Right { get; init; }
+    /// <summary>Space below the child, in points.</summary>
     public double Bottom { get; init; }
+    /// <summary>Fill behind the box, padding included; null for none.</summary>
     public Color? Background { get; init; }
+    /// <summary>Colour of the border around the box; null for none.</summary>
     public Color? BorderColor { get; init; }
+    /// <summary>Border width in points.</summary>
     public double BorderWidth { get; init; } = 0.5;
 
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height)
     {
         LayoutResult r = Child.Layout(width - Left - Right, height - Top - Bottom);

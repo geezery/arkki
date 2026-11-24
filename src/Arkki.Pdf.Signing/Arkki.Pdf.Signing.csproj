@@ -1,8 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>PAdES digital signatures for Arkki.Pdf: sign (B-B, B-T with an RFC 3161 timestamp) and verify. Depends only on Microsoft's System.Security.Cryptography.Pkcs.</Description>
     <RootNamespace>Arkki.Pdf.Signing</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="/" Visible="false" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Arkki.Pdf\Arkki.Pdf.csproj" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />

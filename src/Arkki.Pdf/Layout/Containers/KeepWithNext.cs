@@ -6,7 +6,9 @@ namespace Arkki.Pdf.Layout;
 /// </summary>
 public sealed class KeepWithNext(Element child) : Element
 {
+    /// <summary>The element kept with the one after it.</summary>
     public Element Child { get; } = child;
 
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height) => Child.Layout(width, height);
 }

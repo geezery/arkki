@@ -1,0 +1,8 @@
+# Keep test data byte-exact on every platform: offsets inside PDF files break if line endings change.
+* text=auto
+*.pdf binary
+*.ttf binary
+*.otf binary
+*.png binary
+*.jpg binary
+*.p12 binary

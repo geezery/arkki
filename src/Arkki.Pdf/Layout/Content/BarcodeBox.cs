@@ -8,9 +8,11 @@ namespace Arkki.Pdf.Layout;
 /// </summary>
 public sealed class BarcodeBox(BarcodeMatrix matrix, double width, double height, HAlign align = HAlign.Left) : Element
 {
+    /// <summary>A box that encodes <paramref name="text"/> with <paramref name="symbology"/> and fits it, quiet zone included, into width × height points.</summary>
     public BarcodeBox(IBarcodeSymbology symbology, string text, double width, double height, HAlign align = HAlign.Left)
         : this(symbology.Encode(text), width, height, align) { }
 
+    /// <inheritdoc />
     public override LayoutResult Layout(double available, double availableHeight) =>
         height > availableHeight + 0.001 ? LayoutResult.None(this) : LayoutResult.Full(new BarcodeFragment(matrix, width, height, available, align));
 

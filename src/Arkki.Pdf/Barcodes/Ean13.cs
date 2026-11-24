@@ -10,6 +10,7 @@ public sealed class Ean13 : IBarcodeSymbology
     // Which of the six left digits use the even-parity (G) set, chosen by the first digit.
     private static readonly string[] Parity = ["LLLLLL", "LLGLGG", "LLGGLG", "LLGGGL", "LGLLGG", "LGGLLG", "LGGGLL", "LGLGLG", "LGLGGL", "LGGLGL"];
 
+    /// <inheritdoc />
     public BarcodeMatrix Encode(string text)
     {
         string digits = WithCheckDigit(text);

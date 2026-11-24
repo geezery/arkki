@@ -3,8 +3,11 @@ namespace Arkki.Pdf;
 /// <summary>An RGB color with components in the 0..1 range.</summary>
 public readonly record struct Color(double R, double G, double B)
 {
+    /// <summary>Black.</summary>
     public static readonly Color Black = new(0, 0, 0);
+    /// <summary>White.</summary>
     public static readonly Color White = new(1, 1, 1);
+    /// <summary>A grey from 0 (black) to 1 (white).</summary>
     public static Color Gray(double level) => new(level, level, level);
 
     /// <summary>Parses "#RRGGBB" or "RRGGBB".</summary>

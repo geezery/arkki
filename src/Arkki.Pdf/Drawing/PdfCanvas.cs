@@ -55,6 +55,7 @@ public sealed class PdfCanvas
     private static double FontSize(double size) =>
         double.IsFinite(size) && size > 0 ? size : throw new ArgumentOutOfRangeException(nameof(size), size, "The font size must be a positive number.");
 
+    /// <summary>Sets the colour that text and filled shapes are drawn in. Components are clamped to 0..1.</summary>
     public void SetFillColor(Color c)
     {
         c = Valid(c);
@@ -63,6 +64,7 @@ public sealed class PdfCanvas
         _b.Num(c.R).Sp().Num(c.G).Sp().Num(c.B).Ascii(" rg\n");
     }
 
+    /// <summary>Sets the colour of lines and outlines. Components are clamped to 0..1.</summary>
     public void SetStrokeColor(Color c)
     {
         c = Valid(c);
@@ -71,6 +73,7 @@ public sealed class PdfCanvas
         _b.Num(c.R).Sp().Num(c.G).Sp().Num(c.B).Ascii(" RG\n");
     }
 
+    /// <summary>Sets the width of lines and outlines in points; 0 is the thinnest line the device can draw.</summary>
     public void SetLineWidth(double width)
     {
         if (!double.IsFinite(width) || width < 0) throw new ArgumentOutOfRangeException(nameof(width), width, "The line width must be zero or more.");
@@ -79,16 +82,19 @@ public sealed class PdfCanvas
         _b.Num(width).Ascii(" w\n");
     }
 
+    /// <summary>Draws a straight line in the stroke colour.</summary>
     public void Line(double x1, double y1, double x2, double y2)
     {
         _b.Num(F(x1)).Sp().Num(F(y1)).Ascii(" m ").Num(F(x2)).Sp().Num(F(y2)).Ascii(" l S\n");
     }
 
+    /// <summary>Fills a rectangle (top-left corner, width, height) in the fill colour.</summary>
     public void FillRect(double x, double y, double width, double height)
     {
         _b.Num(F(x)).Sp().Num(F(y)).Sp().Num(F(width)).Sp().Num(F(height)).Ascii(" re f\n");
     }
 
+    /// <summary>Outlines a rectangle in the stroke colour.</summary>
     public void StrokeRect(double x, double y, double width, double height)
     {
         _b.Num(F(x)).Sp().Num(F(y)).Sp().Num(F(width)).Sp().Num(F(height)).Ascii(" re S\n");
@@ -189,12 +195,14 @@ public sealed class PdfCanvas
         _b.Ascii("/").Ascii(_document.OpacityName(opacity)).Ascii(" gs\n");
     }
 
+    /// <summary>Saves the graphics state (colours, line width, opacity, clipping) until the matching <see cref="Restore"/>.</summary>
     public void Save()
     {
         _depth++;
         _b.Ascii("q\n");
     }
 
+    /// <summary>Restores the state saved by the last <see cref="Save"/>; does nothing without one.</summary>
     public void Restore()
     {
         if (_depth == 0) return;
@@ -206,6 +214,7 @@ public sealed class PdfCanvas
         _font = null;
     }
 
+    /// <summary>Limits drawing to the rectangle until the next <see cref="Restore"/>.</summary>
     public void ClipRect(double x, double y, double width, double height)
     {
         _b.Num(F(x)).Sp().Num(F(y)).Sp().Num(F(width)).Sp().Num(F(height)).Ascii(" re W n\n");

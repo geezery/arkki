@@ -21,12 +21,17 @@ public enum PadesLevel
 /// <summary>What <see cref="PdfSignatureVerifier"/> found about one signature.</summary>
 public sealed record PdfSignatureInfo
 {
+    /// <summary>The signature field's full name.</summary>
     public required string FieldName { get; init; }
+    /// <summary>The /SubFilter: ETSI.CAdES.detached for PAdES, adbe.pkcs7.detached for older CMS signatures.</summary>
     public string? SubFilter { get; init; }
     /// <summary>The signer's certificate as embedded in the signature.</summary>
     public X509Certificate2? Certificate { get; init; }
+    /// <summary>The signer's name as the signature dictionary states it (/Name).</summary>
     public string? SignerName { get; init; }
+    /// <summary>The reason the signer gave (/Reason).</summary>
     public string? Reason { get; init; }
+    /// <summary>Where the signer says the document was signed (/Location).</summary>
     public string? Location { get; init; }
     /// <summary>The time the signer claims (/M); not proof of anything.</summary>
     public DateTimeOffset? ClaimedSigningTime { get; init; }
@@ -36,12 +41,17 @@ public sealed record PdfSignatureInfo
     public bool IsIntact { get; init; }
     /// <summary>The signature covers the whole file: nothing was appended after it (later signatures append, too).</summary>
     public bool CoversWholeDocument { get; init; }
+    /// <summary>The signed attributes hold signing-certificate-v2 naming the signer's certificate, as PAdES requires.</summary>
     public bool HasSigningCertificateV2 { get; init; }
+    /// <summary>The signed attributes hold a signing-time attribute, which PAdES baseline signatures must not have.</summary>
     public bool HasSigningTimeAttribute { get; init; }
+    /// <summary>The signature carries an RFC 3161 signature timestamp.</summary>
     public bool HasTimestamp { get; init; }
+    /// <summary>The timestamp's own signature is valid and it covers this signature's value.</summary>
     public bool TimestampValid { get; init; }
     /// <summary>The certificate chains to one of the trusted roots given; null when none were given.</summary>
     public bool? ChainTrusted { get; init; }
+    /// <summary>The PAdES baseline level the signature meets.</summary>
     public PadesLevel Level { get; init; }
     /// <summary>Why the signature is not intact or not trusted, when it is not.</summary>
     public string? Problem { get; init; }

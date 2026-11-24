@@ -10,6 +10,7 @@ public sealed class TextBlock : Element
     private double _wrappedWidth = -1;
     private int _start;
 
+    /// <summary>A paragraph in one style.</summary>
     public TextBlock(string text, TextStyle style, HAlign align = HAlign.Left) : this([new TextSpan(text, style)], align) { }
 
     /// <summary>A paragraph that mixes styles. Line spacing and the baseline follow the first span's style.</summary>
@@ -20,14 +21,19 @@ public sealed class TextBlock : Element
         Spans = spans; Align = align;
     }
 
+    /// <summary>The runs of text and their styles.</summary>
     public IReadOnlyList<TextSpan> Spans { get; }
+    /// <summary>The whole text.</summary>
     public string Text => Spans.Count == 1 ? Spans[0].Text : string.Concat(Spans.Select(s => s.Text));
+    /// <summary>The first span's style, which sets line spacing.</summary>
     public TextStyle Style => Spans[0].Style;
+    /// <summary>Horizontal alignment of the lines.</summary>
     public HAlign Align { get; }
 
     /// <summary>Where words may be hyphenated when they do not fit; null breaks only at soft hyphens (U+00AD) and a compound's own hyphen.</summary>
     public IHyphenator? Hyphenator { get; init; }
 
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height)
     {
         if (_lines is null || _wrappedWidth != width)

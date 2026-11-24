@@ -3,6 +3,7 @@ namespace Arkki.Pdf.Layout;
 /// <summary>Ends the current page: whatever follows starts on a new page.</summary>
 public sealed class PageBreak : Element
 {
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height) =>
         new(LayoutStatus.Partial, new BreakFragment(width), null);
 

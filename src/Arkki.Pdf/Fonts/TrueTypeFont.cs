@@ -17,19 +17,33 @@ public sealed class TrueTypeFont
     private readonly Dictionary<int, ushort> _cmap = new();
     private readonly uint[] _loca;
 
+    /// <summary>The font's PostScript name, used as its name in the PDF.</summary>
     public string PostScriptName { get; }
+    /// <summary>Design units per em; other metrics are in these units.</summary>
     public int UnitsPerEm { get; }
+    /// <summary>Number of glyphs in the font.</summary>
     public int GlyphCount { get; }
+    /// <summary>Typographic ascender in design units.</summary>
     public short Ascender { get; }
+    /// <summary>Typographic descender in design units (negative).</summary>
     public short Descender { get; }
+    /// <summary>Recommended extra space between lines in design units.</summary>
     public short LineGap { get; }
+    /// <summary>Height of capital letters in design units.</summary>
     public short CapHeight { get; }
+    /// <summary>Left edge of the glyph bounding box in design units.</summary>
     public short XMin { get; }
+    /// <summary>Bottom edge of the glyph bounding box in design units.</summary>
     public short YMin { get; }
+    /// <summary>Right edge of the glyph bounding box in design units.</summary>
     public short XMax { get; }
+    /// <summary>Top edge of the glyph bounding box in design units.</summary>
     public short YMax { get; }
+    /// <summary>Slant in degrees counter-clockwise from vertical; 0 for an upright face.</summary>
     public double ItalicAngle { get; }
+    /// <summary>True for a monospaced font.</summary>
     public bool IsFixedPitch { get; }
+    /// <summary>Weight from 100 (thin) to 900 (black); 400 is regular, 700 bold.</summary>
     public int WeightClass { get; }
 
     private TrueTypeFont(byte[] data)
@@ -123,6 +137,7 @@ public sealed class TrueTypeFont
     /// <summary>Glyph index for a Unicode code point, or 0 (.notdef) when the font has no glyph for it.</summary>
     public int GlyphIndex(int codePoint) => _cmap.TryGetValue(codePoint, out ushort g) ? g : 0;
 
+    /// <summary>True when the font has a glyph for the Unicode code point.</summary>
     public bool HasGlyph(int codePoint) => _cmap.ContainsKey(codePoint);
 
     /// <summary>Advance width in font design units.</summary>

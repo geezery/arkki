@@ -3,7 +3,24 @@ using Arkki.Pdf.Reading;
 
 namespace Arkki.Pdf;
 
-public enum PdfFieldKind { Text, CheckBox, RadioButton, Choice, PushButton, Signature, Unknown }
+/// <summary>The kind of a form field.</summary>
+public enum PdfFieldKind
+{
+    /// <summary>A text field.</summary>
+    Text,
+    /// <summary>A check box.</summary>
+    CheckBox,
+    /// <summary>A group of radio buttons; the value is the chosen option.</summary>
+    RadioButton,
+    /// <summary>A list or combo box.</summary>
+    Choice,
+    /// <summary>A button with no value.</summary>
+    PushButton,
+    /// <summary>A signature field.</summary>
+    Signature,
+    /// <summary>A field type Arkki does not know.</summary>
+    Unknown,
+}
 
 /// <summary>A form field (AcroForm) by its fully qualified name, such as "customer.name".</summary>
 public sealed class PdfFormField
@@ -13,7 +30,9 @@ public sealed class PdfFormField
         Name = name; Kind = kind; Value = value; ReadOnly = readOnly; Options = options;
     }
 
+    /// <summary>The field's full name, with parent names joined by dots ("customer.email").</summary>
     public string Name { get; }
+    /// <summary>What kind of field it is.</summary>
     public PdfFieldKind Kind { get; }
 
     /// <summary>
@@ -25,6 +44,7 @@ public sealed class PdfFormField
     /// <summary>True for a check box or radio button that is on.</summary>
     public bool IsChecked => Kind is PdfFieldKind.CheckBox or PdfFieldKind.RadioButton && Value is not null && Value != "Off";
 
+    /// <summary>True when the form does not let a user change the field.</summary>
     public bool ReadOnly { get; }
 
     /// <summary>The choices of a choice field, or the export values of a radio group's buttons.</summary>
@@ -39,6 +59,7 @@ public sealed class PdfFormField
     internal bool Edited { get; set; }
     internal PageAnnotation? Created { get; init; }
 
+    /// <summary>The field's name, kind and value, for debugging.</summary>
     public override string ToString() => $"{Name} ({Kind}) = {Value}";
 }
 
@@ -51,10 +72,13 @@ public sealed class PdfForm
 {
     private readonly List<PdfFormField> _fields = [];
 
+    /// <summary>Every field: those of imported pages and those created in this document.</summary>
     public IReadOnlyList<PdfFormField> Fields => _fields;
 
+    /// <summary>The field with this full name, or null.</summary>
     public PdfFormField? Find(string name) => _fields.FirstOrDefault(f => f.Name == name);
 
+    /// <summary>The field with this full name; throws <see cref="KeyNotFoundException"/> when there is none.</summary>
     public PdfFormField this[string name] => Find(name) ?? throw new KeyNotFoundException($"The form has no field named '{name}'.");
 
     /// <summary>Sets a text or choice field's text, or chooses a radio button by its export value.</summary>

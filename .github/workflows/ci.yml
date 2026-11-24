@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # External validators check every generated file; without them those checks are skipped, not failed.
+      - uses: actions/setup-python@v5
+        if: runner.os == 'Linux'
+        with:
+          python-version: '3.12'
+
+      - name: Install PDF tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qpdf poppler-utils fonts-urw-base35
+          python -m pip install pypdf pyhanko
+
+      - name: Build
+        run: dotnet build Arkki.slnx -c Release -warnaserror -p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: dotnet run -c Release --no-build --project tests/Arkki.Tests
+
+      - name: Pack
+        if: runner.os == 'Linux'
+        run: |
+          dotnet pack src/Arkki.Pdf -c Release --no-build -o artifacts
+          dotnet pack src/Arkki.Pdf.Signing -c Release --no-build -o artifacts
+
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: packages
+          path: artifacts/*.nupkg

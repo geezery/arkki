@@ -22,7 +22,9 @@ public sealed class PdfImage
         _entries = entries; _data = data; _mask = mask;
     }
 
+    /// <summary>Width in pixels.</summary>
     public int Width { get; }
+    /// <summary>Height in pixels.</summary>
     public int Height { get; }
 
     /// <summary>Size of the encoded image data in bytes, soft mask included: what embedding it adds to a file.</summary>

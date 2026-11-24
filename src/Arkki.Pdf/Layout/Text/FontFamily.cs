@@ -3,6 +3,7 @@ namespace Arkki.Pdf.Layout;
 /// <summary>The faces of one typeface. A missing italic face falls back to the upright one.</summary>
 public sealed record FontFamily(PdfFont Regular, PdfFont Bold, PdfFont? Italic = null, PdfFont? BoldItalic = null)
 {
+    /// <summary>The face for the weight and slant; a missing italic falls back to the upright face.</summary>
     public PdfFont Select(bool bold, bool italic) => (bold, italic) switch
     {
         (true, true) => BoldItalic ?? Bold,

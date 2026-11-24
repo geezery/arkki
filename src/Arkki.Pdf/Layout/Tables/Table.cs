@@ -11,6 +11,7 @@ public sealed class Table : Element
     private readonly List<(Element[] Cells, RowStyle? Style)> _rows;
     private readonly int _start;
 
+    /// <summary>A table with the given columns; add rows with <see cref="AddRow(Element[])"/>.</summary>
     public Table(IReadOnlyList<TableColumn> columns)
     {
         Columns = columns;
@@ -25,19 +26,27 @@ public sealed class Table : Element
         RowRule = source.RowRule; RuleWidth = source.RuleWidth;
     }
 
+    /// <summary>The columns, left to right.</summary>
     public IReadOnlyList<TableColumn> Columns { get; }
+    /// <summary>The header cells, repeated at the top of every page; null for none.</summary>
     public Element[]? Header { get; set; }
 
     /// <summary>The header row's style. When unset, <see cref="HeaderBackground"/> and <see cref="HeaderRule"/> apply.</summary>
     public RowStyle? HeaderStyle { get; set; }
+    /// <summary>Space left and right inside each cell, in points.</summary>
     public double CellPaddingX { get; set; } = 3;
+    /// <summary>Space above and below inside each cell, in points.</summary>
     public double CellPaddingY { get; set; } = 2.5;
+    /// <summary>Fill behind the header row; null for none.</summary>
     public Color? HeaderBackground { get; set; }
+    /// <summary>Colour of the line under the header; null for none.</summary>
     public Color? HeaderRule { get; set; }
 
     /// <summary>A rule under every row that has no <see cref="RowStyle"/> of its own.</summary>
     public Color? RowRule { get; set; }
+    /// <summary>Width of rules in points.</summary>
     public double RuleWidth { get; set; } = 0.4;
+    /// <summary>Number of body rows.</summary>
     public int RowCount => _rows.Count;
 
     /// <summary>Adds a row. Its cells must cover every column exactly once, counting spans.</summary>
@@ -80,6 +89,7 @@ public sealed class Table : Element
         return AddRow(elements);
     }
 
+    /// <summary>Sets the header row, repeated on every page.</summary>
     public Table SetHeader(params Element[] cells)
     {
         CheckCovers(cells);
@@ -87,6 +97,7 @@ public sealed class Table : Element
         return this;
     }
 
+    /// <summary>Sets the header row with a row style.</summary>
     public Table SetHeader(RowStyle style, params Element[] cells)
     {
         SetHeader(cells);
@@ -94,6 +105,7 @@ public sealed class Table : Element
         return this;
     }
 
+    /// <summary>Sets a header row of text cells in one style.</summary>
     public Table SetHeader(TextStyle style, params string[] cells)
     {
         Header = new Element[cells.Length];
@@ -106,6 +118,7 @@ public sealed class Table : Element
 
     private RowStyle EffectiveStyle(RowStyle? style) => style ?? new RowStyle(RuleBelow: RowRule, RuleWidth: RuleWidth);
 
+    /// <inheritdoc />
     public override LayoutResult Layout(double width, double height)
     {
         double[] widths = Len.Resolve(Columns.Select(c => c.Width).ToList(), width);
