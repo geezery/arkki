@@ -40,8 +40,17 @@ public sealed class PdfImage
     public static PdfImage Load(byte[] data, int maxPixelWidth, int maxPixelHeight)
     {
         ArgumentNullException.ThrowIfNull(data);
-        if (data.Length > 8 && data[0] == 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G') return LoadPng(data, maxPixelWidth, maxPixelHeight);
-        if (data.Length > 4 && data[0] == 0xFF && data[1] == 0xD8) return LoadJpeg(data);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxPixelWidth);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxPixelHeight);
+        try
+        {
+            if (data.Length > 8 && data[0] == 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G') return LoadPng(data, maxPixelWidth, maxPixelHeight);
+            if (data.Length > 4 && data[0] == 0xFF && data[1] == 0xD8) return LoadJpeg(data);
+        }
+        catch (Exception e) when (e is ArgumentException || e is IndexOutOfRangeException || e is OverflowException || (e is IOException && e is not InvalidDataException))
+        {
+            throw new InvalidDataException("The image file is truncated or damaged.", e);
+        }
         throw new NotSupportedException("Unsupported image format. Supported formats: PNG, JPEG.");
     }
 

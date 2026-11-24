@@ -45,8 +45,19 @@ public sealed class PdfCanvas
 
     internal ReadOnlySpan<byte> Content => _b.Span;
 
+    private static double F(double v, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(v))] string? name = null) =>
+        double.IsFinite(v) ? v : throw new ArgumentOutOfRangeException(name, v, "Coordinates and sizes must be finite numbers.");
+
+    private static Color Valid(Color c, [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(c))] string? name = null) =>
+        double.IsNaN(c.R) || double.IsNaN(c.G) || double.IsNaN(c.B) ? throw new ArgumentOutOfRangeException(name, "A color component is NaN.")
+        : new Color(Math.Clamp(c.R, 0, 1), Math.Clamp(c.G, 0, 1), Math.Clamp(c.B, 0, 1));
+
+    private static double FontSize(double size) =>
+        double.IsFinite(size) && size > 0 ? size : throw new ArgumentOutOfRangeException(nameof(size), size, "The font size must be a positive number.");
+
     public void SetFillColor(Color c)
     {
+        c = Valid(c);
         if (c == _fill) return;
         _fill = c;
         _b.Num(c.R).Sp().Num(c.G).Sp().Num(c.B).Ascii(" rg\n");
@@ -54,6 +65,7 @@ public sealed class PdfCanvas
 
     public void SetStrokeColor(Color c)
     {
+        c = Valid(c);
         if (c == _stroke) return;
         _stroke = c;
         _b.Num(c.R).Sp().Num(c.G).Sp().Num(c.B).Ascii(" RG\n");
@@ -61,6 +73,7 @@ public sealed class PdfCanvas
 
     public void SetLineWidth(double width)
     {
+        if (!double.IsFinite(width) || width < 0) throw new ArgumentOutOfRangeException(nameof(width), width, "The line width must be zero or more.");
         if (width == _lineWidth) return;
         _lineWidth = width;
         _b.Num(width).Ascii(" w\n");
@@ -68,22 +81,24 @@ public sealed class PdfCanvas
 
     public void Line(double x1, double y1, double x2, double y2)
     {
-        _b.Num(x1).Sp().Num(y1).Ascii(" m ").Num(x2).Sp().Num(y2).Ascii(" l S\n");
+        _b.Num(F(x1)).Sp().Num(F(y1)).Ascii(" m ").Num(F(x2)).Sp().Num(F(y2)).Ascii(" l S\n");
     }
 
     public void FillRect(double x, double y, double width, double height)
     {
-        _b.Num(x).Sp().Num(y).Sp().Num(width).Sp().Num(height).Ascii(" re f\n");
+        _b.Num(F(x)).Sp().Num(F(y)).Sp().Num(F(width)).Sp().Num(F(height)).Ascii(" re f\n");
     }
 
     public void StrokeRect(double x, double y, double width, double height)
     {
-        _b.Num(x).Sp().Num(y).Sp().Num(width).Sp().Num(height).Ascii(" re S\n");
+        _b.Num(F(x)).Sp().Num(F(y)).Sp().Num(F(width)).Sp().Num(F(height)).Ascii(" re S\n");
     }
 
     /// <summary>Draws text with its baseline starting at (x, y).</summary>
     public void Text(PdfFont font, double size, double x, double y, ReadOnlySpan<char> text)
     {
+        ArgumentNullException.ThrowIfNull(font);
+        FontSize(size); F(x); F(y);
         if (text.IsEmpty) return;
         BeginText(font, size);
         _b.Ascii("1 0 0 -1 ").Num(x).Sp().Num(y).Ascii(" Tm ");
@@ -98,6 +113,8 @@ public sealed class PdfCanvas
     /// <summary>Draws text rotated counter-clockwise by <paramref name="degrees"/> around its baseline origin.</summary>
     public void TextRotated(PdfFont font, double size, double x, double y, double degrees, ReadOnlySpan<char> text)
     {
+        ArgumentNullException.ThrowIfNull(font);
+        FontSize(size); F(x); F(y); F(degrees);
         if (text.IsEmpty) return;
         double rad = degrees * Math.PI / 180, cos = Math.Cos(rad), sin = Math.Sin(rad);
         BeginText(font, size);
@@ -119,6 +136,8 @@ public sealed class PdfCanvas
     /// <summary>Draws an image into the given rectangle.</summary>
     public void Image(PdfImage image, double x, double y, double width, double height)
     {
+        ArgumentNullException.ThrowIfNull(image);
+        F(x); F(y); F(width); F(height);
         _b.Ascii("q ").Num(width).Ascii(" 0 0 ").Num(-height).Sp().Num(x).Sp().Num(y + height)
             .Ascii(" cm /").Ascii(_document.ImageName(image)).Ascii(" Do Q\n");
     }
@@ -165,6 +184,7 @@ public sealed class PdfCanvas
     /// </summary>
     public void SetOpacity(double opacity)
     {
+        if (double.IsNaN(opacity)) throw new ArgumentOutOfRangeException(nameof(opacity), "The opacity is NaN.");
         opacity = Math.Clamp(opacity, 0, 1);
         _b.Ascii("/").Ascii(_document.OpacityName(opacity)).Ascii(" gs\n");
     }
@@ -188,6 +208,6 @@ public sealed class PdfCanvas
 
     public void ClipRect(double x, double y, double width, double height)
     {
-        _b.Num(x).Sp().Num(y).Sp().Num(width).Sp().Num(height).Ascii(" re W n\n");
+        _b.Num(F(x)).Sp().Num(F(y)).Sp().Num(F(width)).Sp().Num(F(height)).Ascii(" re W n\n");
     }
 }

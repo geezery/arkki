@@ -12,6 +12,7 @@ TextFlowTests.Run();
 SigningTests.Run();
 FuzzTests.Run();
 ProductionTests.Run();
+ValidationTests.Run();
 PdfDocumentTests.Run();
 PdfReaderTests.Run();
 MergeTests.Run();
