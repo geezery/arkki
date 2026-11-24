@@ -13,6 +13,14 @@
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
     <PackageTags>pdf;pdf-generation;pdf-forms;pades;digital-signature;layout;cross-platform</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://geezery.github.io/arkki/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/geezery/arkki</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>https://github.com/geezery/arkki/blob/main/CHANGELOG.md</PackageReleaseNotes>
+    <!-- Source Link: the debugger fetches the exact source of a release from GitHub. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <!-- Tests and samples are not packages; the two libraries opt back in. -->

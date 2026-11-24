@@ -1,5 +1,11 @@
 # Arkki
 
+[![Arkki: PDF for .NET, in pure managed C#. Layout engine, forms, encryption and PAdES signatures. No dependencies, no native code.](https://raw.githubusercontent.com/geezery/arkki/main/docs/assets/hero.png)](https://geezery.github.io/arkki/)
+
+[![CI](https://github.com/geezery/arkki/actions/workflows/ci.yml/badge.svg)](https://github.com/geezery/arkki/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/vpre/Arkki.Pdf?label=Arkki.Pdf)](https://www.nuget.org/packages/Arkki.Pdf)
+[![License: MPL-2.0](https://img.shields.io/badge/license-MPL--2.0-1f5eff)](https://github.com/geezery/arkki/blob/main/LICENSE)
+
 PDF for .NET, written in C#: create documents with a paginating layout engine, open and edit existing
 files, fill and create forms, encrypt, and sign. Pure managed code that runs the same on Windows, Linux and
 macOS: no System.Drawing, no native binaries, no browser engine. The core package has no dependencies;
@@ -12,6 +18,14 @@ License 2.0.
 | `Arkki.Pdf.Signing` | PAdES digital signatures (B-B, B-T with an RFC 3161 timestamp) and their verification |
 
 Requires .NET 10.
+
+```
+dotnet add package Arkki.Pdf --prerelease
+dotnet add package Arkki.Pdf.Signing --prerelease   # only for digital signatures
+```
+
+[Homepage](https://geezery.github.io/arkki/) · [Wiki](https://github.com/geezery/arkki/wiki) ·
+[Changelog](https://github.com/geezery/arkki/blob/main/CHANGELOG.md) · [Contributing](https://github.com/geezery/arkki/blob/main/CONTRIBUTING.md) · [Security](https://github.com/geezery/arkki/blob/main/SECURITY.md)
 
 ## Create a document
 
@@ -212,5 +226,5 @@ form; it is an example to copy, not part of the library.
 
 ## License
 
-MPL-2.0, see [`LICENSE`](LICENSE). The Liberation Sans fonts under `samples/fonts` are licensed separately
-under the SIL Open Font License 1.1. See [`CHANGELOG.md`](CHANGELOG.md) for what changed.
+MPL-2.0, see [`LICENSE`](https://github.com/geezery/arkki/blob/main/LICENSE). The Liberation Sans fonts under `samples/fonts` are licensed separately
+under the SIL Open Font License 1.1. See [`CHANGELOG.md`](https://github.com/geezery/arkki/blob/main/CHANGELOG.md) for what changed.
