@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Arkki.Pdf\Arkki.Pdf.csproj" />
+    <ProjectReference Include="..\..\src\Arkki.Pdf.Signing\Arkki.Pdf.Signing.csproj" />
     <ProjectReference Include="..\..\samples\Arkki.Samples.Finvoice\Arkki.Samples.Finvoice.csproj" />
   </ItemGroup>
 </Project>

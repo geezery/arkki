@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Arkki.Pdf.Signing/Arkki.Pdf.Signing.csproj" />
     <Project Path="src/Arkki.Pdf/Arkki.Pdf.csproj" />
   </Folder>
   <Folder Name="/samples/">

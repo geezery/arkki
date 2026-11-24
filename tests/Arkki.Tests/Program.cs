@@ -9,6 +9,7 @@ SpanAndBreakTests.Run();
 RowStyleTests.Run();
 RichTextTests.Run();
 TextFlowTests.Run();
+SigningTests.Run();
 PdfDocumentTests.Run();
 PdfReaderTests.Run();
 MergeTests.Run();
